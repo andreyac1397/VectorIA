@@ -35,9 +35,3 @@ Repositorio de recursos y conjuntos de datos utilizados en VectorIA.
 | Bonus | [vectoria_dengue_semanal.csv](https://www.cucvirtual.ac.cr/pluginfile.php/318201/mod_folder/content/0/VectorIA-datos/vectoria_dengue_semanal.csv?forcedownload=1) |
 
 **Documentación:** [LEEME_datos.md](https://www.cucvirtual.ac.cr/pluginfile.php/318201/mod_folder/content/0/VectorIA-datos/LEEME_datos.md?forcedownload=1)
-
-> **Nota:** Los enlaces de CUC Virtual pueden requerir iniciar sesión en la plataforma institucional.
-
----
-
-**VectorIA · Inteligencia Artificial · 2026**
