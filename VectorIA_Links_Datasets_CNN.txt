@@ -1,0 +1,28 @@
+VectorIA - ENLACES DE DATASETS PARA CNN
+====================================
+
+Descargar estos 5 datasets de imágenes (4 principales + 1 bonus).
+
+
+1. IEEE DataPort - Image Dataset of Aedes and Culex Mosquito Species
+   https://ieee-dataport.org/open-access/image-dataset-aedes-and-culex-mosquito-species
+   Archivo: Mosquito Dataset Augmented.zip (30,77 MB)
+
+2. Mendeley Data - Dataset of Vector Mosquito Images
+   https://data.mendeley.com/datasets/88s6fvgg2p/4
+   Descargar: Mosquito Images Original.zip (110 MB), NO el Augmented.
+
+3. Mosquito Alert Challenge 2023 - Zenodo
+   https://zenodo.org/records/15063886
+   Descargar: mosquito_dataset_ai_v1.zip (10,4 GB)
+
+4. Kaggle - Aedes Mosquitos (aegypti y albopictus)
+   https://www.kaggle.com/datasets/pradeepisawasan/aedes-mosquitos
+
+5. BONUS (opcional): MLMI-2024 - Mosquito Larvae Microscopic Images
+   https://data.mendeley.com/datasets/pgby6jmtp4/1
+
+IMPORTANTE
+- No subir a GitHub los ZIP grandes de imágenes.
+- Cada integrante puede descargar los datasets necesarios desde estos enlaces.
+- Para el proyecto del profesor, los números 1 a 4 son las fuentes de CNN y el 5 es el bonus opcional.

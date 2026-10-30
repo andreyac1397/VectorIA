@@ -1,0 +1,6 @@
+# Datasets de mosquitos
+data/raw/mosquitos/
+
+# Modelos entrenados
+models/*.keras
+models/*.h5
