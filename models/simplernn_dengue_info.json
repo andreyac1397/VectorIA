@@ -1,0 +1,43 @@
+{
+    "modelo": "SimpleRNN",
+    "ventana_semanas": 26,
+    "horizonte_semanas": 4,
+    "features": [
+        "log_casos",
+        "lluvia_mm",
+        "temp_max_c",
+        "temp_min_c",
+        "humedad_rel_pct",
+        "humedad_lag1",
+        "lluvia_lag3",
+        "temp_min_lag8",
+        "temp_max_lag12",
+        "sem_sin",
+        "sem_cos"
+    ],
+    "particion": "train<=2021 | val=2022 | test=2023-2024",
+    "metricas_test": {
+        "RMSE": 225.25462640361516,
+        "MAE": 147.41765432074519,
+        "RMSE_h1": 194.98900389531642,
+        "MAE_h1": 131.1293407100262,
+        "RMSE_h2": 210.51259196706118,
+        "MAE_h2": 136.67701033790513,
+        "RMSE_h3": 210.68959242983365,
+        "MAE_h3": 133.0650739764223,
+        "RMSE_h4": 276.10182811763747,
+        "MAE_h4": 188.7991922586271
+    },
+    "metricas_val": {
+        "RMSE": 44.138862479592994,
+        "MAE": 33.51294165241475,
+        "RMSE_h1": 33.74639461759454,
+        "MAE_h1": 26.65246040967046,
+        "RMSE_h2": 41.438008616642264,
+        "MAE_h2": 33.36795078978247,
+        "RMSE_h3": 45.61364700479073,
+        "MAE_h3": 34.742720467703684,
+        "RMSE_h4": 53.44552575373079,
+        "MAE_h4": 39.28863494250239
+    }
+}
