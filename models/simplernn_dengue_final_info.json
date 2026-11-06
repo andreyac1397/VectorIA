@@ -1,7 +1,7 @@
 {
     "modelo": "simplernn_dengue_final",
     "entrenado_con": "toda la serie 2014-2024",
-    "epocas": 200,
+    "epocas": 55,
     "features": [
         "log_casos",
         "lluvia_mm",
