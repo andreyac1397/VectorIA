@@ -167,8 +167,9 @@ def crear_features(df: pd.DataFrame) -> pd.DataFrame:
     df_feat["sem_sin"] = np.sin(2 * np.pi * semana / 52.0)
     df_feat["sem_cos"] = np.cos(2 * np.pi * semana / 52.0)
 
-    # 4. Eliminar las primeras 12 filas (debido al rezago máximo shift(12))
-    df_feat = df_feat.dropna().reset_index(drop=True)
+    # 4. Descartar únicamente las primeras 12 semanas iniciales (rezago máximo)
+    features = columnas_features()
+    df_feat = df_feat.iloc[12:].reset_index(drop=True)
     return df_feat
 
 
@@ -395,9 +396,9 @@ def construir_lstm(
     n_features: int,
     ventana: int = VENTANA,
     horizonte: int = HORIZONTE,
-    u1: int = 24,
+    u1: int = 32,
     u2: Optional[int] = None,
-    dropout: float = 0.0,
+    dropout: float = 0.2,
     lr: float = 0.001,
     l2_reg: float = 0.001,
     usar_residual: bool = True,
@@ -655,7 +656,8 @@ def pronosticar_futuro(
 
     # Bucle de inferencia recursiva semana a semana
     for idx_fut in range(idx_inicio_futuro, len(df_extendido)):
-        sub_df = df_extendido.iloc[:idx_fut + 1].copy()
+        # Tomar todas las filas hasta la anterior que ya tienen casos observados o predichos
+        sub_df = df_extendido.iloc[:idx_fut].copy()
         sub_feat = crear_features(sub_df)
         if len(sub_feat) < ventana:
             continue
@@ -664,12 +666,14 @@ def pronosticar_futuro(
         ventana_scaled = esc_x.transform(ventana_df).reshape(1, ventana, len(features))
 
         pred_scaled = modelo.predict(ventana_scaled, verbose=0)
+        pred_scaled = np.clip(pred_scaled, -1.0, 5.0)
         pred_log = esc_y.inverse_transform(pred_scaled)
+        pred_log = np.clip(pred_log, 0.0, np.log(100000.0))
         pred_casos = np.expm1(pred_log)
-        pred_casos = np.clip(pred_casos, 0, None)
+        pred_casos = np.clip(pred_casos, 0.0, 50000.0)
 
-        caso_siguiente = float(pred_casos[0, 0])
-        df_extendido.at[idx_fut, "casos_dengue"] = caso_siguiente
+        caso_siguiente = float(np.nan_to_num(pred_casos[0, 0], nan=0.0, posinf=5000.0, neginf=0.0))
+        df_extendido.loc[idx_fut, "casos_dengue"] = caso_siguiente
 
     df_resultado = df_extendido.iloc[idx_inicio_futuro:].copy().reset_index(drop=True)
     df_resultado["casos_pred"] = df_resultado["casos_dengue"]
@@ -684,16 +688,22 @@ def tabla_evaluacion(datos: Dict, preds_dict: Dict[str, np.ndarray]) -> pd.DataF
     idx_test = datos["idx_obj"][datos["masks"]["test"]]
     df_feat = datos["df_feat"]
 
+    pred_rnn = preds_dict["SimpleRNN"][:, 0]
+    pred_lstm = preds_dict["LSTM"][:, 0]
+    casos_reales = df_feat["casos_dengue"].iloc[idx_test].to_numpy()
+
     filas = {
         "fecha_inicio_semana": df_feat["fecha_inicio_semana"].iloc[idx_test].to_numpy(),
         "anio": df_feat["anio"].iloc[idx_test].to_numpy(),
         "semana_epi": df_feat["semana_epi"].iloc[idx_test].to_numpy(),
-        "casos_reales": df_feat["casos_dengue"].iloc[idx_test].to_numpy(),
-        "pred_SimpleRNN": preds_dict["SimpleRNN"][:, 0],
-        "pred_LSTM": preds_dict["LSTM"][:, 0],
+        "casos_observados": casos_reales,
+        "pred_SimpleRNN": pred_rnn,
+        "pred_LSTM": pred_lstm,
+        "casos_estimados": pred_lstm,
         "periodo": "evaluacion_" + df_feat["anio"].iloc[idx_test].astype(str).to_numpy(),
         "clima_usado": "observado_real",
     }
     df_eval = pd.DataFrame(filas)
-    df_eval["casos_acum_4sem_LSTM"] = np.nan
+    df_eval["casos_acum_4sem_LSTM"] = df_eval["pred_LSTM"].rolling(4, min_periods=1).sum().shift(-3)
+    df_eval["casos_acum_4sem_LSTM"] = df_eval["casos_acum_4sem_LSTM"].bfill().ffill()
     return df_eval
