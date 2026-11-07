@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 RAIZ_PROYECTO = Path(__file__).resolve().parents[2]
 RUTA_DATOS = RAIZ_PROYECTO / "data" / "raw" / "VectorIA-datos"
 RUTA_PROCESADOS = RAIZ_PROYECTO / "data" / "processed"
-RUTA_MODELOS = RAIZ_PROYECTO / "models"
+RUTA_MODELOS = RAIZ_PROYECTO / "models" / "LSTM"
 RUTA_FIGURAS = RAIZ_PROYECTO / "reports" / "figures"
 
 # Asegurar la existencia de las carpetas de salida en la estructura del proyecto
@@ -559,7 +559,7 @@ def guardar_artefactos(
         esc_y: Escalador de la variable objetivo.
         nombre: Prefijo o identificador del modelo (ej: 'lstm_dengue').
         metadata: Parámetro opcional mantenido por compatibilidad (no se genera .json).
-        ruta: Directorio de destino (por defecto 'models/').
+        ruta: Directorio de destino (por defecto 'models/LSTM/').
     """
     if ruta is None:
         ruta = RUTA_MODELOS
