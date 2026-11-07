@@ -10,7 +10,7 @@ Este módulo proporciona el flujo de trabajo completo:
 5. Cálculo de baselines de referencia (Estacional histórico y Persistencia).
 6. Construcción y entrenamiento de redes neuronales recurrentes (SimpleRNN y LSTM optimizada con conexión residual).
 7. Evaluación en escala real de casos (RMSE y MAE multihorizonte).
-8. Persistencia de artefactos (.keras, .joblib, .json).
+8. Persistencia de artefactos (.keras, .joblib).
 9. Pronóstico recursivo hacia el futuro (2025–2026) con climatología estacional.
 """
 
@@ -551,14 +551,14 @@ def guardar_artefactos(
     metadata: Optional[Dict] = None,
     ruta: Optional[Union[str, Path]] = None,
 ) -> None:
-    """Guarda el modelo entrenado (.keras), los escaladores (.joblib) y los metadatos (.json).
+    """Guarda el modelo entrenado (.keras) y los escaladores (.joblib).
 
     Args:
         modelo: Modelo Keras a serializar.
         esc_x: Escalador de variables de entrada.
         esc_y: Escalador de la variable objetivo.
         nombre: Prefijo o identificador del modelo (ej: 'lstm_dengue').
-        metadata: Diccionario opcional con métricas, fechas e hiperparámetros.
+        metadata: Parámetro opcional mantenido por compatibilidad (no se genera .json).
         ruta: Directorio de destino (por defecto 'models/').
     """
     if ruta is None:
@@ -569,23 +569,6 @@ def guardar_artefactos(
     modelo.save(ruta_dir / f"{nombre}.keras")
     joblib.dump(esc_x, ruta_dir / f"{nombre}_esc_x.joblib")
     joblib.dump(esc_y, ruta_dir / f"{nombre}_esc_y.joblib")
-
-    if metadata is not None:
-        def _convertir(obj):
-            if isinstance(obj, np.integer):
-                return int(obj)
-            if isinstance(obj, np.floating):
-                return float(obj)
-            if isinstance(obj, np.ndarray):
-                return obj.tolist()
-            if isinstance(obj, dict):
-                return {k: _convertir(v) for k, v in obj.items()}
-            if isinstance(obj, list):
-                return [_convertir(v) for v in obj]
-            return obj
-
-        with open(ruta_dir / f"{nombre}_info.json", "w", encoding="utf-8") as f:
-            json.dump(_convertir(metadata), f, indent=4, ensure_ascii=False)
 
 
 # ==============================================================================
