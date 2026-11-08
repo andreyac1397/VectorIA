@@ -4,10 +4,6 @@ data/raw/mosquitos/
 # Datasets del profesor
 data/raw/VectorIA-datos/
 
-# Modelos entrenados
-models/*.keras
-models/*.h5
-
 # Configuración del editor
 .idea/
 
