@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/__init__.py
+src/data_prep.py
+src/train/__init__.py
+src/train/ann.py
+src/train/cnn.py
+src/train/lstm.py
+src/vectoria.egg-info/PKG-INFO
+src/vectoria.egg-info/SOURCES.txt
+src/vectoria.egg-info/dependency_links.txt
+src/vectoria.egg-info/top_level.txt
