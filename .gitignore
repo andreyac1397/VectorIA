@@ -1,11 +1,13 @@
 # Datasets de mosquitos
 data/raw/mosquitos/
+data/raw/Mosquito Dataset Augmented/
 
 # Datasets del profesor
 data/raw/VectorIA-datos/
 
 # Configuración del editor
 .idea/
+.vscode/
 
 # Archivos temporales de Python y Jupyter
 __pycache__/
@@ -15,3 +17,11 @@ __pycache__/
 # Entornos virtuales
 .venv/
 venv/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Archivos temporales
+*.log

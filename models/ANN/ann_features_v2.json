@@ -1,0 +1,23 @@
+{
+  "features": [
+    "casos_pred_4sem",
+    "casos_umbral_endemico",
+    "lluvia_14d_mm",
+    "temp_max",
+    "aegypti_detectado",
+    "semana_epi"
+  ],
+  "target": "recomendacion",
+  "classes": [
+    "alerta_sanitaria",
+    "eliminacion_criaderos",
+    "fumigacion_focalizada",
+    "monitoreo_normal"
+  ],
+  "seed": 42,
+  "test_size": 0.2,
+  "dataset": "data/raw/vectoria_acciones.csv",
+  "modelo": "ann_model_v2.keras",
+  "escalador": "ann_scaler_v2.joblib",
+  "codificador": "ann_label_encoder_v2.joblib"
+}

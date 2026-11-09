@@ -1,0 +1,487 @@
+﻿anio,provincia,canton,casos_dengue,estado
+2013,Alajuela,Alajuela,,Sin datos
+2013,Alajuela,Alfaro Ruiz,4.0,Con datos
+2013,Alajuela,Atenas,3722.0,Con datos
+2013,Alajuela,Grecia,846.0,Con datos
+2013,Alajuela,Guatuso,30.0,Con datos
+2013,Alajuela,Los Chiles,10.0,Con datos
+2013,Alajuela,Naranjo,68.0,Con datos
+2013,Alajuela,Orotina,3304.0,Con datos
+2013,Alajuela,Palmares,152.0,Con datos
+2013,Alajuela,Poás,392.0,Con datos
+2013,Alajuela,San Carlos,666.0,Con datos
+2013,Alajuela,San Mateo,368.0,Con datos
+2013,Alajuela,San Ramón,136.0,Con datos
+2013,Alajuela,Upala,2220.0,Con datos
+2013,Alajuela,Valverde Vega,92.0,Con datos
+2013,Cartago,Alvarado,0.0,Con datos
+2013,Cartago,Cartago,,Sin datos
+2013,Cartago,El Guarco,18.0,Con datos
+2013,Cartago,Jiménez,0.0,Con datos
+2013,Cartago,La Unión,30.0,Con datos
+2013,Cartago,Oreamuno,92.0,Con datos
+2013,Cartago,Paraíso,58.0,Con datos
+2013,Cartago,Turrialba,1178.0,Con datos
+2013,Guanacaste,Abangares,1068.0,Con datos
+2013,Guanacaste,Bagaces,1192.0,Con datos
+2013,Guanacaste,Carrillo,2770.0,Con datos
+2013,Guanacaste,Cañas,2712.0,Con datos
+2013,Guanacaste,Hojancha,666.0,Con datos
+2013,Guanacaste,La Cruz,830.0,Con datos
+2013,Guanacaste,Liberia,3630.0,Con datos
+2013,Guanacaste,Nandayure,1080.0,Con datos
+2013,Guanacaste,Nicoya,7272.0,Con datos
+2013,Guanacaste,Santa Cruz,5818.0,Con datos
+2013,Guanacaste,Tilarán,516.0,Con datos
+2013,Heredia,Barva,128.0,Con datos
+2013,Heredia,Belén,278.0,Con datos
+2013,Heredia,Flores,390.0,Con datos
+2013,Heredia,Heredia,,Sin datos
+2013,Heredia,San Isidro,208.0,Con datos
+2013,Heredia,San Pablo,214.0,Con datos
+2013,Heredia,San Rafael,196.0,Con datos
+2013,Heredia,Santa Bárbara,230.0,Con datos
+2013,Heredia,Santo Domingo,204.0,Con datos
+2013,Heredia,Sarapiquí,2798.0,Con datos
+2013,Limón,Guácimo,2662.0,Con datos
+2013,Limón,Limón,,Sin datos
+2013,Limón,Matina,828.0,Con datos
+2013,Limón,Pococí,4504.0,Con datos
+2013,Limón,Siquirres,4304.0,Con datos
+2013,Limón,Talamanca,582.0,Con datos
+2013,Puntarenas,Aguirre,,Sin datos
+2013,Puntarenas,Buenos Aires,2068.0,Con datos
+2013,Puntarenas,Corredores,1526.0,Con datos
+2013,Puntarenas,Coto Brus,82.0,Con datos
+2013,Puntarenas,Esparza,1662.0,Con datos
+2013,Puntarenas,Garabito,1860.0,Con datos
+2013,Puntarenas,Golfito,2472.0,Con datos
+2013,Puntarenas,Montes de Oro,1700.0,Con datos
+2013,Puntarenas,Osa,1888.0,Con datos
+2013,Puntarenas,Parrita,2240.0,Con datos
+2013,Puntarenas,Puntarenas,,Sin datos
+2013,San José,Acosta,24.0,Con datos
+2013,San José,Alajuelita,262.0,Con datos
+2013,San José,Aserrí,138.0,Con datos
+2013,San José,Curridabat,176.0,Con datos
+2013,San José,Desamparados,898.0,Con datos
+2013,San José,Dota,,Sin datos
+2013,San José,Escazú,72.0,Con datos
+2013,San José,Goicoechea,262.0,Con datos
+2013,San José,León Cortés,,Sin datos
+2013,San José,Montes de Oca,90.0,Con datos
+2013,San José,Mora,790.0,Con datos
+2013,San José,Moravia,118.0,Con datos
+2013,San José,Puriscal,242.0,Con datos
+2013,San José,Pérez Zeledón,3784.0,Con datos
+2013,San José,San José,,Sin datos
+2013,San José,Santa Ana,372.0,Con datos
+2013,San José,Tarrazú,,Sin datos
+2013,San José,Tibás,364.0,Con datos
+2013,San José,Turrubares,270.0,Con datos
+2013,San José,Vásquez de Coronado,116.0,Con datos
+2014,Alajuela,Alajuela,,Sin datos
+2014,Alajuela,Alfaro Ruiz,0.0,Con datos
+2014,Alajuela,Atenas,172.0,Con datos
+2014,Alajuela,Grecia,122.0,Con datos
+2014,Alajuela,Guatuso,4.0,Con datos
+2014,Alajuela,Los Chiles,4.0,Con datos
+2014,Alajuela,Naranjo,12.0,Con datos
+2014,Alajuela,Orotina,162.0,Con datos
+2014,Alajuela,Palmares,14.0,Con datos
+2014,Alajuela,Poás,48.0,Con datos
+2014,Alajuela,San Carlos,218.0,Con datos
+2014,Alajuela,San Mateo,16.0,Con datos
+2014,Alajuela,San Ramón,10.0,Con datos
+2014,Alajuela,Upala,334.0,Con datos
+2014,Alajuela,Valverde Vega,0.0,Con datos
+2014,Cartago,Alvarado,0.0,Con datos
+2014,Cartago,Cartago,,Sin datos
+2014,Cartago,El Guarco,2.0,Con datos
+2014,Cartago,Jiménez,0.0,Con datos
+2014,Cartago,La Unión,12.0,Con datos
+2014,Cartago,Oreamuno,2.0,Con datos
+2014,Cartago,Paraíso,6.0,Con datos
+2014,Cartago,Turrialba,150.0,Con datos
+2014,Guanacaste,Abangares,128.0,Con datos
+2014,Guanacaste,Bagaces,250.0,Con datos
+2014,Guanacaste,Carrillo,660.0,Con datos
+2014,Guanacaste,Cañas,214.0,Con datos
+2014,Guanacaste,Hojancha,228.0,Con datos
+2014,Guanacaste,La Cruz,60.0,Con datos
+2014,Guanacaste,Liberia,138.0,Con datos
+2014,Guanacaste,Nandayure,48.0,Con datos
+2014,Guanacaste,Nicoya,750.0,Con datos
+2014,Guanacaste,Santa Cruz,1584.0,Con datos
+2014,Guanacaste,Tilarán,48.0,Con datos
+2014,Heredia,Barva,28.0,Con datos
+2014,Heredia,Belén,90.0,Con datos
+2014,Heredia,Flores,186.0,Con datos
+2014,Heredia,Heredia,,Sin datos
+2014,Heredia,San Isidro,48.0,Con datos
+2014,Heredia,San Pablo,80.0,Con datos
+2014,Heredia,San Rafael,26.0,Con datos
+2014,Heredia,Santa Bárbara,36.0,Con datos
+2014,Heredia,Santo Domingo,70.0,Con datos
+2014,Heredia,Sarapiquí,974.0,Con datos
+2014,Limón,Guácimo,578.0,Con datos
+2014,Limón,Limón,,Sin datos
+2014,Limón,Matina,900.0,Con datos
+2014,Limón,Pococí,1522.0,Con datos
+2014,Limón,Siquirres,546.0,Con datos
+2014,Limón,Talamanca,402.0,Con datos
+2014,Puntarenas,Aguirre,,Sin datos
+2014,Puntarenas,Buenos Aires,1552.0,Con datos
+2014,Puntarenas,Corredores,1432.0,Con datos
+2014,Puntarenas,Coto Brus,40.0,Con datos
+2014,Puntarenas,Esparza,198.0,Con datos
+2014,Puntarenas,Garabito,102.0,Con datos
+2014,Puntarenas,Golfito,352.0,Con datos
+2014,Puntarenas,Montes de Oro,310.0,Con datos
+2014,Puntarenas,Osa,234.0,Con datos
+2014,Puntarenas,Parrita,434.0,Con datos
+2014,Puntarenas,Puntarenas,,Sin datos
+2014,San José,Acosta,4.0,Con datos
+2014,San José,Alajuelita,82.0,Con datos
+2014,San José,Aserrí,78.0,Con datos
+2014,San José,Curridabat,36.0,Con datos
+2014,San José,Desamparados,318.0,Con datos
+2014,San José,Dota,,Sin datos
+2014,San José,Escazú,14.0,Con datos
+2014,San José,Goicoechea,106.0,Con datos
+2014,San José,León Cortés,,Sin datos
+2014,San José,Montes de Oca,18.0,Con datos
+2014,San José,Mora,14.0,Con datos
+2014,San José,Moravia,28.0,Con datos
+2014,San José,Puriscal,106.0,Con datos
+2014,San José,Pérez Zeledón,280.0,Con datos
+2014,San José,San José,,Sin datos
+2014,San José,Santa Ana,64.0,Con datos
+2014,San José,Tarrazú,,Sin datos
+2014,San José,Tibás,48.0,Con datos
+2014,San José,Turrubares,0.0,Con datos
+2014,San José,Vásquez de Coronado,10.0,Con datos
+2015,Alajuela,Alajuela,,Sin datos
+2015,Alajuela,Alfaro Ruiz,2.0,Con datos
+2015,Alajuela,Atenas,588.0,Con datos
+2015,Alajuela,Grecia,222.0,Con datos
+2015,Alajuela,Guatuso,2.0,Con datos
+2015,Alajuela,Los Chiles,4.0,Con datos
+2015,Alajuela,Naranjo,132.0,Con datos
+2015,Alajuela,Orotina,198.0,Con datos
+2015,Alajuela,Palmares,2.0,Con datos
+2015,Alajuela,Poás,66.0,Con datos
+2015,Alajuela,San Carlos,106.0,Con datos
+2015,Alajuela,San Mateo,20.0,Con datos
+2015,Alajuela,San Ramón,4.0,Con datos
+2015,Alajuela,Upala,14.0,Con datos
+2015,Alajuela,Valverde Vega,0.0,Con datos
+2015,Cartago,Alvarado,0.0,Con datos
+2015,Cartago,Cartago,,Sin datos
+2015,Cartago,El Guarco,0.0,Con datos
+2015,Cartago,Jiménez,0.0,Con datos
+2015,Cartago,La Unión,22.0,Con datos
+2015,Cartago,Oreamuno,10.0,Con datos
+2015,Cartago,Paraíso,12.0,Con datos
+2015,Cartago,Turrialba,80.0,Con datos
+2015,Guanacaste,Abangares,3654.0,Con datos
+2015,Guanacaste,Bagaces,150.0,Con datos
+2015,Guanacaste,Carrillo,1386.0,Con datos
+2015,Guanacaste,Cañas,990.0,Con datos
+2015,Guanacaste,Hojancha,234.0,Con datos
+2015,Guanacaste,La Cruz,132.0,Con datos
+2015,Guanacaste,Liberia,1242.0,Con datos
+2015,Guanacaste,Nandayure,212.0,Con datos
+2015,Guanacaste,Nicoya,2710.0,Con datos
+2015,Guanacaste,Santa Cruz,3168.0,Con datos
+2015,Guanacaste,Tilarán,24.0,Con datos
+2015,Heredia,Barva,10.0,Con datos
+2015,Heredia,Belén,74.0,Con datos
+2015,Heredia,Flores,68.0,Con datos
+2015,Heredia,Heredia,,Sin datos
+2015,Heredia,San Isidro,14.0,Con datos
+2015,Heredia,San Pablo,40.0,Con datos
+2015,Heredia,San Rafael,30.0,Con datos
+2015,Heredia,Santa Bárbara,44.0,Con datos
+2015,Heredia,Santo Domingo,50.0,Con datos
+2015,Heredia,Sarapiquí,286.0,Con datos
+2015,Limón,Guácimo,78.0,Con datos
+2015,Limón,Limón,,Sin datos
+2015,Limón,Matina,82.0,Con datos
+2015,Limón,Pococí,398.0,Con datos
+2015,Limón,Siquirres,52.0,Con datos
+2015,Limón,Talamanca,60.0,Con datos
+2015,Puntarenas,Aguirre,,Sin datos
+2015,Puntarenas,Buenos Aires,156.0,Con datos
+2015,Puntarenas,Corredores,2396.0,Con datos
+2015,Puntarenas,Coto Brus,26.0,Con datos
+2015,Puntarenas,Esparza,944.0,Con datos
+2015,Puntarenas,Garabito,282.0,Con datos
+2015,Puntarenas,Golfito,2072.0,Con datos
+2015,Puntarenas,Montes de Oro,1046.0,Con datos
+2015,Puntarenas,Osa,446.0,Con datos
+2015,Puntarenas,Parrita,392.0,Con datos
+2015,Puntarenas,Puntarenas,,Sin datos
+2015,San José,Acosta,4.0,Con datos
+2015,San José,Alajuelita,74.0,Con datos
+2015,San José,Aserrí,14.0,Con datos
+2015,San José,Curridabat,52.0,Con datos
+2015,San José,Desamparados,218.0,Con datos
+2015,San José,Dota,,Sin datos
+2015,San José,Escazú,28.0,Con datos
+2015,San José,Goicoechea,62.0,Con datos
+2015,San José,León Cortés,,Sin datos
+2015,San José,Montes de Oca,32.0,Con datos
+2015,San José,Mora,46.0,Con datos
+2015,San José,Moravia,52.0,Con datos
+2015,San José,Puriscal,108.0,Con datos
+2015,San José,Pérez Zeledón,408.0,Con datos
+2015,San José,San José,,Sin datos
+2015,San José,Santa Ana,72.0,Con datos
+2015,San José,Tarrazú,,Sin datos
+2015,San José,Tibás,70.0,Con datos
+2015,San José,Turrubares,146.0,Con datos
+2015,San José,Vásquez de Coronado,34.0,Con datos
+2016,Alajuela,Alajuela,,Sin datos
+2016,Alajuela,Alfaro Ruiz,2.0,Con datos
+2016,Alajuela,Atenas,3164.0,Con datos
+2016,Alajuela,Grecia,686.0,Con datos
+2016,Alajuela,Guatuso,72.0,Con datos
+2016,Alajuela,Los Chiles,2.0,Con datos
+2016,Alajuela,Naranjo,56.0,Con datos
+2016,Alajuela,Orotina,476.0,Con datos
+2016,Alajuela,Palmares,30.0,Con datos
+2016,Alajuela,Poás,146.0,Con datos
+2016,Alajuela,San Carlos,414.0,Con datos
+2016,Alajuela,San Mateo,128.0,Con datos
+2016,Alajuela,San Ramón,16.0,Con datos
+2016,Alajuela,Upala,64.0,Con datos
+2016,Alajuela,Valverde Vega,26.0,Con datos
+2016,Cartago,Alvarado,,Sin datos
+2016,Cartago,Cartago,,Sin datos
+2016,Cartago,El Guarco,6.0,Con datos
+2016,Cartago,Jiménez,,Sin datos
+2016,Cartago,La Unión,14.0,Con datos
+2016,Cartago,Oreamuno,2.0,Con datos
+2016,Cartago,Paraíso,8.0,Con datos
+2016,Cartago,Turrialba,96.0,Con datos
+2016,Guanacaste,Abangares,444.0,Con datos
+2016,Guanacaste,Bagaces,366.0,Con datos
+2016,Guanacaste,Carrillo,866.0,Con datos
+2016,Guanacaste,Cañas,776.0,Con datos
+2016,Guanacaste,Hojancha,142.0,Con datos
+2016,Guanacaste,La Cruz,186.0,Con datos
+2016,Guanacaste,Liberia,488.0,Con datos
+2016,Guanacaste,Nandayure,282.0,Con datos
+2016,Guanacaste,Nicoya,776.0,Con datos
+2016,Guanacaste,Santa Cruz,1222.0,Con datos
+2016,Guanacaste,Tilarán,40.0,Con datos
+2016,Heredia,Barva,72.0,Con datos
+2016,Heredia,Belén,150.0,Con datos
+2016,Heredia,Flores,114.0,Con datos
+2016,Heredia,Heredia,,Sin datos
+2016,Heredia,San Isidro,28.0,Con datos
+2016,Heredia,San Pablo,80.0,Con datos
+2016,Heredia,San Rafael,66.0,Con datos
+2016,Heredia,Santa Bárbara,118.0,Con datos
+2016,Heredia,Santo Domingo,114.0,Con datos
+2016,Heredia,Sarapiquí,1246.0,Con datos
+2016,Limón,Guácimo,294.0,Con datos
+2016,Limón,Limón,,Sin datos
+2016,Limón,Matina,220.0,Con datos
+2016,Limón,Pococí,1444.0,Con datos
+2016,Limón,Siquirres,668.0,Con datos
+2016,Limón,Talamanca,54.0,Con datos
+2016,Puntarenas,Aguirre,,Sin datos
+2016,Puntarenas,Buenos Aires,1690.0,Con datos
+2016,Puntarenas,Corredores,746.0,Con datos
+2016,Puntarenas,Coto Brus,42.0,Con datos
+2016,Puntarenas,Esparza,774.0,Con datos
+2016,Puntarenas,Garabito,710.0,Con datos
+2016,Puntarenas,Golfito,888.0,Con datos
+2016,Puntarenas,Montes de Oro,338.0,Con datos
+2016,Puntarenas,Osa,1130.0,Con datos
+2016,Puntarenas,Parrita,1162.0,Con datos
+2016,Puntarenas,Puntarenas,,Sin datos
+2016,San José,Acosta,380.0,Con datos
+2016,San José,Alajuelita,194.0,Con datos
+2016,San José,Aserrí,68.0,Con datos
+2016,San José,Curridabat,74.0,Con datos
+2016,San José,Desamparados,696.0,Con datos
+2016,San José,Dota,,Sin datos
+2016,San José,Escazú,34.0,Con datos
+2016,San José,Goicoechea,74.0,Con datos
+2016,San José,León Cortés,,Sin datos
+2016,San José,Montes de Oca,114.0,Con datos
+2016,San José,Mora,554.0,Con datos
+2016,San José,Moravia,52.0,Con datos
+2016,San José,Puriscal,688.0,Con datos
+2016,San José,Pérez Zeledón,4096.0,Con datos
+2016,San José,San José,,Sin datos
+2016,San José,Santa Ana,266.0,Con datos
+2016,San José,Tarrazú,,Sin datos
+2016,San José,Tibás,118.0,Con datos
+2016,San José,Turrubares,64.0,Con datos
+2016,San José,Vásquez de Coronado,84.0,Con datos
+2017,Alajuela,Alajuela,,Sin datos
+2017,Alajuela,Alfaro Ruiz,0.0,Con datos
+2017,Alajuela,Atenas,238.0,Con datos
+2017,Alajuela,Grecia,102.0,Con datos
+2017,Alajuela,Guatuso,10.0,Con datos
+2017,Alajuela,Los Chiles,2.0,Con datos
+2017,Alajuela,Naranjo,32.0,Con datos
+2017,Alajuela,Orotina,110.0,Con datos
+2017,Alajuela,Palmares,4.0,Con datos
+2017,Alajuela,Poás,48.0,Con datos
+2017,Alajuela,San Carlos,58.0,Con datos
+2017,Alajuela,San Mateo,26.0,Con datos
+2017,Alajuela,San Ramón,4.0,Con datos
+2017,Alajuela,Upala,36.0,Con datos
+2017,Alajuela,Valverde Vega,2.0,Con datos
+2017,Cartago,Alvarado,0.0,Con datos
+2017,Cartago,Cartago,,Sin datos
+2017,Cartago,El Guarco,2.0,Con datos
+2017,Cartago,Jiménez,0.0,Con datos
+2017,Cartago,La Unión,4.0,Con datos
+2017,Cartago,Oreamuno,6.0,Con datos
+2017,Cartago,Paraíso,6.0,Con datos
+2017,Cartago,Turrialba,140.0,Con datos
+2017,Guanacaste,Abangares,68.0,Con datos
+2017,Guanacaste,Bagaces,22.0,Con datos
+2017,Guanacaste,Carrillo,148.0,Con datos
+2017,Guanacaste,Cañas,102.0,Con datos
+2017,Guanacaste,Hojancha,54.0,Con datos
+2017,Guanacaste,La Cruz,32.0,Con datos
+2017,Guanacaste,Liberia,56.0,Con datos
+2017,Guanacaste,Nandayure,14.0,Con datos
+2017,Guanacaste,Nicoya,100.0,Con datos
+2017,Guanacaste,Santa Cruz,188.0,Con datos
+2017,Guanacaste,Tilarán,10.0,Con datos
+2017,Heredia,Barva,32.0,Con datos
+2017,Heredia,Belén,56.0,Con datos
+2017,Heredia,Flores,84.0,Con datos
+2017,Heredia,Heredia,,Sin datos
+2017,Heredia,San Isidro,10.0,Con datos
+2017,Heredia,San Pablo,38.0,Con datos
+2017,Heredia,San Rafael,72.0,Con datos
+2017,Heredia,Santa Bárbara,46.0,Con datos
+2017,Heredia,Santo Domingo,46.0,Con datos
+2017,Heredia,Sarapiquí,386.0,Con datos
+2017,Limón,Guácimo,784.0,Con datos
+2017,Limón,Limón,,Sin datos
+2017,Limón,Matina,1366.0,Con datos
+2017,Limón,Pococí,1200.0,Con datos
+2017,Limón,Siquirres,662.0,Con datos
+2017,Limón,Talamanca,90.0,Con datos
+2017,Puntarenas,Aguirre,,Sin datos
+2017,Puntarenas,Buenos Aires,46.0,Con datos
+2017,Puntarenas,Corredores,66.0,Con datos
+2017,Puntarenas,Coto Brus,14.0,Con datos
+2017,Puntarenas,Esparza,166.0,Con datos
+2017,Puntarenas,Garabito,192.0,Con datos
+2017,Puntarenas,Golfito,128.0,Con datos
+2017,Puntarenas,Montes de Oro,228.0,Con datos
+2017,Puntarenas,Osa,18.0,Con datos
+2017,Puntarenas,Parrita,114.0,Con datos
+2017,Puntarenas,Puntarenas,,Sin datos
+2017,San José,Acosta,16.0,Con datos
+2017,San José,Alajuelita,12.0,Con datos
+2017,San José,Aserrí,38.0,Con datos
+2017,San José,Curridabat,10.0,Con datos
+2017,San José,Desamparados,166.0,Con datos
+2017,San José,Dota,,Sin datos
+2017,San José,Escazú,2.0,Con datos
+2017,San José,Goicoechea,6.0,Con datos
+2017,San José,León Cortés,,Sin datos
+2017,San José,Montes de Oca,18.0,Con datos
+2017,San José,Mora,26.0,Con datos
+2017,San José,Moravia,16.0,Con datos
+2017,San José,Puriscal,102.0,Con datos
+2017,San José,Pérez Zeledón,340.0,Con datos
+2017,San José,San José,,Sin datos
+2017,San José,Santa Ana,54.0,Con datos
+2017,San José,Tarrazú,,Sin datos
+2017,San José,Tibás,34.0,Con datos
+2017,San José,Turrubares,14.0,Con datos
+2017,San José,Vásquez de Coronado,18.0,Con datos
+2018,Alajuela,Alajuela,,Sin datos
+2018,Alajuela,Alfaro Ruiz,,Sin datos
+2018,Alajuela,Atenas,136.0,Con datos
+2018,Alajuela,Grecia,30.0,Con datos
+2018,Alajuela,Guatuso,4.0,Con datos
+2018,Alajuela,Los Chiles,0.0,Con datos
+2018,Alajuela,Naranjo,0.0,Con datos
+2018,Alajuela,Orotina,64.0,Con datos
+2018,Alajuela,Palmares,0.0,Con datos
+2018,Alajuela,Poás,16.0,Con datos
+2018,Alajuela,San Carlos,22.0,Con datos
+2018,Alajuela,San Mateo,18.0,Con datos
+2018,Alajuela,San Ramón,0.0,Con datos
+2018,Alajuela,Upala,28.0,Con datos
+2018,Alajuela,Valverde Vega,0.0,Con datos
+2018,Cartago,Alvarado,,Sin datos
+2018,Cartago,Cartago,,Sin datos
+2018,Cartago,El Guarco,4.0,Con datos
+2018,Cartago,Jiménez,,Sin datos
+2018,Cartago,La Unión,18.0,Con datos
+2018,Cartago,Oreamuno,2.0,Con datos
+2018,Cartago,Paraíso,20.0,Con datos
+2018,Cartago,Turrialba,88.0,Con datos
+2018,Guanacaste,Abangares,32.0,Con datos
+2018,Guanacaste,Bagaces,24.0,Con datos
+2018,Guanacaste,Carrillo,110.0,Con datos
+2018,Guanacaste,Cañas,118.0,Con datos
+2018,Guanacaste,Hojancha,18.0,Con datos
+2018,Guanacaste,La Cruz,28.0,Con datos
+2018,Guanacaste,Liberia,82.0,Con datos
+2018,Guanacaste,Nandayure,22.0,Con datos
+2018,Guanacaste,Nicoya,78.0,Con datos
+2018,Guanacaste,Santa Cruz,86.0,Con datos
+2018,Guanacaste,Tilarán,10.0,Con datos
+2018,Heredia,Barva,22.0,Con datos
+2018,Heredia,Belén,22.0,Con datos
+2018,Heredia,Flores,28.0,Con datos
+2018,Heredia,Heredia,,Sin datos
+2018,Heredia,San Isidro,18.0,Con datos
+2018,Heredia,San Pablo,16.0,Con datos
+2018,Heredia,San Rafael,24.0,Con datos
+2018,Heredia,Santa Bárbara,18.0,Con datos
+2018,Heredia,Santo Domingo,26.0,Con datos
+2018,Heredia,Sarapiquí,1386.0,Con datos
+2018,Limón,Guácimo,242.0,Con datos
+2018,Limón,Limón,,Sin datos
+2018,Limón,Matina,94.0,Con datos
+2018,Limón,Pococí,500.0,Con datos
+2018,Limón,Siquirres,218.0,Con datos
+2018,Limón,Talamanca,188.0,Con datos
+2018,Puntarenas,Aguirre,,Sin datos
+2018,Puntarenas,Buenos Aires,6.0,Con datos
+2018,Puntarenas,Corredores,22.0,Con datos
+2018,Puntarenas,Coto Brus,14.0,Con datos
+2018,Puntarenas,Esparza,86.0,Con datos
+2018,Puntarenas,Garabito,58.0,Con datos
+2018,Puntarenas,Golfito,52.0,Con datos
+2018,Puntarenas,Montes de Oro,42.0,Con datos
+2018,Puntarenas,Osa,8.0,Con datos
+2018,Puntarenas,Parrita,50.0,Con datos
+2018,Puntarenas,Puntarenas,,Sin datos
+2018,San José,Acosta,2.0,Con datos
+2018,San José,Alajuelita,28.0,Con datos
+2018,San José,Aserrí,10.0,Con datos
+2018,San José,Curridabat,8.0,Con datos
+2018,San José,Desamparados,38.0,Con datos
+2018,San José,Dota,,Sin datos
+2018,San José,Escazú,4.0,Con datos
+2018,San José,Goicoechea,2.0,Con datos
+2018,San José,León Cortés,,Sin datos
+2018,San José,Montes de Oca,18.0,Con datos
+2018,San José,Mora,8.0,Con datos
+2018,San José,Moravia,8.0,Con datos
+2018,San José,Puriscal,2.0,Con datos
+2018,San José,Pérez Zeledón,106.0,Con datos
+2018,San José,San José,78.0,Con datos
+2018,San José,Santa Ana,0.0,Con datos
+2018,San José,Tarrazú,,Sin datos
+2018,San José,Tibás,12.0,Con datos
+2018,San José,Turrubares,0.0,Con datos
+2018,San José,Vásquez de Coronado,8.0,Con datos
