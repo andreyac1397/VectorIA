@@ -1,0 +1,26 @@
+{
+  "model_name": "VectorIA CNN Mosquitos",
+  "model_file": "cnn_mosquitos.keras",
+  "model_type": "CNN",
+  "input_width": 128,
+  "input_height": 128,
+  "input_channels": 3,
+  "color_mode": "RGB",
+  "resize_method": "resize_with_pad",
+  "input_range": [0, 255],
+  "normalization_inside_model": true,
+  "classes": [
+    "Aedes aegypti",
+    "Aedes albopictus",
+    "Culex"
+  ],
+  "class_ids": {
+    "Aedes aegypti": 0,
+    "Aedes albopictus": 1,
+    "Culex": 2
+  },
+  "output_activation": "softmax",
+  "validation_f1_macro": 0.9262,
+  "validation_accuracy": 0.9223,
+  "notes": "Clasificador de mosquitos adultos. Para mejores resultados, el mosquito debe ser claramente visible y ocupar una parte relevante de la imagen. El modelo no diagnostica dengue en personas."
+}
