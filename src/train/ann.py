@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GroupShuffleSplit
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from tensorflow.keras.layers import Dense, Dropout, Input
 from tensorflow.keras.models import Sequential
@@ -25,7 +25,7 @@ DATASET_PATH = BASE_DIR / "data" / "raw" / "vectoria_acciones.csv"
 MODELS_DIR = BASE_DIR / "models"
 RESULTS_DIR = BASE_DIR / "data" / "processed"
 
-# Guardamos una versión nueva para preservar ann_model.keras de la compañera.
+# Guardamos una versión nueva para preservar ann_model.keras 
 MODEL_PATH = MODELS_DIR / "ann_model_v2.keras"
 SCALER_PATH = MODELS_DIR / "ann_scaler_v2.joblib"
 ENCODER_PATH = MODELS_DIR / "ann_label_encoder_v2.joblib"
@@ -89,10 +89,12 @@ def entrenar():
     if len(encoder.classes_) < 2:
         raise ValueError("Se necesitan al menos dos clases de recomendación.")
 
-    # La misma división 80/20 que utilizó la compañera.
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y_encoded, test_size=0.2, random_state=SEED, shuffle=True
-    )
+    # División 80/20 agrupando por semana epidemiológica (semana_epi).
+    gss = GroupShuffleSplit(n_splits=1, test_size=0.2, random_state=SEED)
+    train_idx, test_idx = next(gss.split(X, y_encoded, groups=df["semana_epi"]))
+
+    X_train, X_test = X.iloc[train_idx], X.iloc[test_idx]
+    y_train, y_test = y_encoded[train_idx], y_encoded[test_idx]
 
     # IMPORTANTE: ajustar solo con entrenamiento y reutilizar en pruebas y producción.
     scaler = StandardScaler()
