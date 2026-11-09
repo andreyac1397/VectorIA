@@ -1,0 +1,2 @@
+﻿Modelo,Accuracy_validation,Precision_macro_validation,Recall_macro_validation,F1_macro_validation,Mejor_val_loss,Epoca_mejor_val_loss,Epocas_ejecutadas
+CNN propia,0.9223446893787575,0.9263472336507128,0.9269991454180193,0.9261622290105835,0.26670318841934204,41,49
