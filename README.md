@@ -35,3 +35,61 @@ Repositorio de recursos y conjuntos de datos utilizados en VectorIA.
 | Bonus | [vectoria_dengue_semanal.csv](https://www.cucvirtual.ac.cr/pluginfile.php/318201/mod_folder/content/0/VectorIA-datos/vectoria_dengue_semanal.csv?forcedownload=1) |
 
 **Documentación:** [LEEME_datos.md](https://www.cucvirtual.ac.cr/pluginfile.php/318201/mod_folder/content/0/VectorIA-datos/LEEME_datos.md?forcedownload=1)
+
+
+# Módulo CNN — VectorIA
+
+## Propósito
+
+Clasificar fotografías de mosquitos adultos en:
+
+- Aedes aegypti
+- Aedes albopictus
+- Culex
+
+## Uso
+
+from src.predict\_mosquito import predecir\_mosquito
+
+resultado = predecir\_mosquito("foto.jpg")
+
+print(resultado["especie"])
+
+print(resultado["score"])
+
+print(resultado["probabilidades"])
+
+## Formato de entrada
+
+Formatos recomendados:
+
+- JPG
+- JPEG
+- PNG
+
+La imagen se convierte automáticamente a RGB y se redimensiona internamente a 128 × 128 píxeles conservando la proporción mediante padding.
+
+Para obtener mejores resultados, el mosquito debe ser claramente visible y ocupar una parte relevante de la fotografía.
+
+## Formato de salida
+
+La función retorna un diccionario con:
+
+- class\_id: identificador numérico de la clase.
+- especie: especie predicha.
+- score: valor Softmax de la clase seleccionada.
+- probabilidades: scores de las tres clases.
+- modelo: nombre del modelo utilizado.
+- input\_size: tamaño interno utilizado por la CNN.
+
+## Modelo
+
+El modelo actual se encuentra en:
+
+models/cnn\_mosquitos.keras
+
+## Aviso
+
+VectorIA no diagnostica dengue en personas. La clasificación automática de imágenes es una herramienta de apoyo y puede producir clasificaciones incorrectas.
+
+
