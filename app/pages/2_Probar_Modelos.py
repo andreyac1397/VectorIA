@@ -409,6 +409,14 @@ with tab_cnn:
 
             if resultado is not None:
                 st.session_state.cnn_resultado = resultado
+                especie_cnn = extraer_especie(resultado)
+                if modelo_disponible(resultado) and especie_cnn in (
+                    "Aedes aegypti", "Aedes albopictus", "Culex"
+                ):
+                    # La ANN usa detección de Aedes aegypti específicamente.
+                    st.session_state.ann_aegypti = (
+                        "Sí" if especie_cnn == "Aedes aegypti" else "No"
+                    )
 
     with columna_resultado:
 
@@ -832,16 +840,26 @@ with tab_ann:
                 key=f"ann_semana_solo_lectura_{clave_actual}",
             )
 
+            deteccion_cnn_disponible = (
+                especie in ("Aedes aegypti", "Aedes albopictus", "Culex")
+            )
             aegypti = st.radio(
                 "¿Se detectó Aedes aegypti?",
                 options=["Sí", "No"],
                 horizontal=True,
                 key="ann_aegypti",
                 on_change=limpiar_recomendacion_ann,
+                disabled=deteccion_cnn_disponible,
             )
-            st.caption(
-                "Selección manual hasta que esté disponible la CNN."
-            )
+            if deteccion_cnn_disponible:
+                st.caption(
+                    f"Detección automática desde MobileNetV2: {especie}. "
+                    "Campo bloqueado para mantener la clasificación de la CNN."
+                )
+            else:
+                st.caption(
+                    "Selección manual hasta ejecutar la CNN."
+                )
 
         if datos_lstm_ann is None:
             st.info("Primero genere una predicción LSTM válida.")
