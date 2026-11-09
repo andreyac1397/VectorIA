@@ -16,6 +16,11 @@
   ],
   "seed": 42,
   "test_size": 0.2,
+  "split_method": "GroupShuffleSplit",
+  "group_columns": [
+    "anio",
+    "semana_epi"
+  ],
   "dataset": "data/raw/vectoria_acciones.csv",
   "modelo": "ann_model_v2.keras",
   "escalador": "ann_scaler_v2.joblib",

@@ -1,264 +1,263 @@
-"""Dashboard de métricas DEMO de VectorIA. Sustituir DATA_DEMO al recibir resultados reales."""
+"""Panel de métricas de VectorIA.
+
+Ubicación: app/pages/3_Metricas_Modelos.py
+Los datos se leen desde data/processed y no se inventan métricas ausentes.
+"""
 from pathlib import Path
 import sys
 
-import numpy as np
+import altair as alt
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
-from plotly.subplots import make_subplots
 
+ROOT = Path(__file__).resolve().parents[2]
 APP_DIR = Path(__file__).resolve().parents[1]
 if str(APP_DIR) not in sys.path:
     sys.path.insert(0, str(APP_DIR))
 
 from utils.theme import aplicar_tema, mostrar_identidad, mostrar_encabezado
 
-st.set_page_config(page_title="Métricas de modelos | VectorIA", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
+DATA = ROOT / "data" / "processed"
+CNN = DATA / "cnn"
+
+st.set_page_config(page_title="Métricas | VectorIA", page_icon="📊", layout="wide")
 aplicar_tema()
 mostrar_identidad()
-mostrar_encabezado("Métricas de modelos", "Evaluación de CNN, LSTM y ANN para la vigilancia del dengue.")
-st.warning("**Resultados de demostración:** todas las métricas y gráficas de esta página son simuladas. No representan modelos entrenados ni resultados de evaluación reales.", icon="🧪")
-
-AZUL = "#1E376C"
-ROJO = "#EF4135"
-AZUL_CLARO = "#4C83C5"
-GRIS = "#52647D"
-
-# DATOS TEMPORALES. Al integrar los modelos, reemplazar estos diccionarios
-# por las métricas evaluadas en un conjunto de prueba independiente.
-CNN = {
-    "CNN propia": {"Accuracy": 87.2, "Precision": 85.4, "Recall": 84.1, "F1-score": 84.7},
-    "MobileNetV2": {"Accuracy": 91.2, "Precision": 89.5, "Recall": 90.8, "F1-score": 90.1},
-}
-LSTM = {
-    "SimpleRNN": {"RMSE": 180.2, "MAE": 135.7},
-    "LSTM": {"RMSE": 125.4, "MAE": 91.8},
-}
-ANN = {"Accuracy": 88.0, "Precision": 88.5, "Recall": 86.2, "F1-score": 87.3}
-SEMANAS = [f"S{i}" for i in range(1, 13)]
-REAL = [620, 710, 660, 790, 840, 750, 900, 880, 970, 860, 790, 940]
-PRED_LSTM = [590, 680, 690, 755, 820, 770, 880, 905, 940, 875, 815, 915]
-PRED_RNN = [540, 610, 740, 695, 740, 830, 790, 960, 840, 930, 715, 850]
-
-SECCIONES = {
-    "cnn": ["Resumen", "Comparación de métricas", "Matrices de confusión", "Tabla de resultados"],
-    "lstm": ["Resumen", "Comparación de errores", "Casos reales y predicciones", "Tabla de resultados"],
-    "ann": ["Resumen", "Gráfico de rendimiento", "Matriz de confusión", "Tabla de resultados"],
-}
+mostrar_encabezado(
+    "Métricas de los modelos",
+    "Evaluación y comparación de los modelos CNN, LSTM y ANN de VectorIA.",
+)
+st.caption("Se muestran resultados de archivos CSV existentes. Las métricas de validación y prueba no son intercambiables.")
+st.divider()
 
 
-def inicializar_estado():
-    for modulo, secciones in SECCIONES.items():
-        for indice in range(len(secciones)):
-            clave = f"met_{modulo}_{indice}"
-            if clave not in st.session_state:
-                st.session_state[clave] = True
+@st.cache_data(show_spinner=False)
+def leer_csv(ruta: str, mtime: int) -> pd.DataFrame:
+    del mtime
+    return pd.read_csv(ruta, encoding="utf-8-sig")
 
 
-def cambiar_todas(modulo, estado):
-    for indice in range(len(SECCIONES[modulo])):
-        st.session_state[f"met_{modulo}_{indice}"] = estado
+def cargar(ruta: Path) -> pd.DataFrame | None:
+    if not ruta.is_file():
+        return None
+    try:
+        return leer_csv(str(ruta), ruta.stat().st_mtime_ns)
+    except (OSError, UnicodeError, pd.errors.ParserError, ValueError) as exc:
+        st.warning(f"No se pudo leer {ruta.name}: {exc}")
+        return None
 
 
-def cabecera_controles(modulo):
-    col1, col2, resto = st.columns([1, 1, 3], vertical_alignment="center")
-    with col1:
-        st.button("⤢ Expandir todas", key=f"abrir_{modulo}", on_click=cambiar_todas, args=(modulo, True), use_container_width=True)
-    with col2:
-        st.button("⤡ Contraer todas", key=f"cerrar_{modulo}", on_click=cambiar_todas, args=(modulo, False), use_container_width=True)
-    with resto:
-        st.caption("Cada sección también se puede abrir o cerrar individualmente.")
+def numero(valor):
+    try:
+        return float(valor)
+    except (ValueError, TypeError):
+        return None
 
 
-def seccion(modulo, indice, descripcion=None):
-    """Crea un contenedor grande con borde negro y botón de expansión."""
-    clave = f"met_{modulo}_{indice}"
-    titulo = SECCIONES[modulo][indice]
-    contenedor = st.container(border=True)
-    with contenedor:
-        columna_titulo, columna_boton = st.columns([6, 1.5], vertical_alignment="center")
-        with columna_titulo:
-            st.markdown(f"#### {titulo}")
-            if descripcion:
-                st.caption(descripcion)
-        with columna_boton:
-            abierto = st.session_state[clave]
-            if st.button("▴ Ocultar" if abierto else "▾ Mostrar", key=f"toggle_{modulo}_{indice}", use_container_width=True):
-                st.session_state[clave] = not abierto
-                st.rerun()
-    return contenedor, st.session_state[clave]
+def porcentaje(valor):
+    n = numero(valor)
+    return f"{n:.2%}" if n is not None else "—"
 
 
-def tarjetas(valores):
-    columnas = st.columns(len(valores), gap="medium")
-    for columna, (etiqueta, valor) in zip(columnas, valores.items()):
-        with columna:
-            st.metric(etiqueta, valor)
+def decimal(valor, digitos=2):
+    n = numero(valor)
+    return f"{n:,.{digitos}f}" if n is not None else "—"
 
 
-def estilo(fig, altura=410):
-    fig.update_layout(
-        height=altura, template="plotly_white",
-        font=dict(color="#17243B"),
-        margin=dict(l=12, r=15, t=28, b=18),
-        plot_bgcolor="#FFFFFF", paper_bgcolor="#FFFFFF",
-        legend=dict(orientation="h", y=1.14, x=0),
-        hovermode="x unified",
+def tabla(df: pd.DataFrame):
+    st.dataframe(df, hide_index=True, width="stretch")
+
+
+def grafico_barras(df: pd.DataFrame, eje_x: str, eje_y: str, titulo: str, ordenar=None):
+    if df.empty:
+        return
+    grafico = alt.Chart(df).mark_bar().encode(
+        x=alt.X(f"{eje_x}:N", sort=ordenar, title=None),
+        y=alt.Y(f"{eje_y}:Q", title=eje_y),
+        tooltip=[alt.Tooltip(f"{eje_x}:N"), alt.Tooltip(f"{eje_y}:Q", format=".3f")],
+    ).properties(height=300, title=titulo)
+    st.altair_chart(grafico, width="stretch")
+
+
+def matriz_confusion(df: pd.DataFrame, titulo: str):
+    if df is None or df.empty:
+        return
+    matriz = df.copy()
+    # El CSV ANN fue guardado con índice: primera columna sin nombre.
+    primera = matriz.columns[0]
+    matriz = matriz.rename(columns={primera: "Clase real"})
+    matriz["Clase real"] = matriz["Clase real"].astype(str)
+    columnas = [c for c in matriz.columns if c != "Clase real"]
+    if not columnas:
+        tabla(matriz)
+        return
+    long = matriz.melt(id_vars="Clase real", value_vars=columnas,
+                       var_name="Clase predicha", value_name="Cantidad")
+    long["Cantidad"] = pd.to_numeric(long["Cantidad"], errors="coerce")
+    grafico = alt.Chart(long).mark_rect().encode(
+        x=alt.X("Clase predicha:N", title="Predicción"),
+        y=alt.Y("Clase real:N", title="Valor real"),
+        color=alt.Color("Cantidad:Q"),
+        tooltip=["Clase real:N", "Clase predicha:N", "Cantidad:Q"],
+    ).properties(height=320, title=titulo)
+    etiquetas = alt.Chart(long).mark_text().encode(
+        x="Clase predicha:N", y="Clase real:N",
+        text=alt.Text("Cantidad:Q", format=".0f"),
+        color=alt.condition("datum.Cantidad > 0", alt.value("white"), alt.value("black")),
     )
-    fig.update_xaxes(showgrid=False)
-    fig.update_yaxes(gridcolor="#E4EAF2", zerolinecolor="#A8B5C7")
-    return fig
+    st.altair_chart(grafico + etiquetas, width="stretch")
 
 
-def barras_comparadas(datos, nombres, unidades="%", minimo=0, maximo=None):
-    fig = go.Figure()
-    colores = [AZUL, ROJO, AZUL_CLARO]
-    for indice, (modelo, metricas) in enumerate(datos.items()):
-        fig.add_trace(go.Bar(name=modelo, x=nombres, y=[metricas[n] for n in nombres],
-                             marker_color=colores[indice % len(colores)],
-                             text=[f"{metricas[n]:.1f}{unidades}" for n in nombres], textposition="outside"))
-    fig.update_layout(barmode="group", yaxis_title="Porcentaje (%)" if unidades == "%" else "Error (casos)")
-    fig.update_yaxes(range=[minimo, maximo] if maximo is not None else None)
-    return estilo(fig)
+def grafico_historial(df: pd.DataFrame):
+    requeridas = {"epoca", "accuracy", "val_accuracy", "loss", "val_loss"}
+    if not requeridas.issubset(df.columns):
+        st.info("El historial no contiene las columnas esperadas para graficar.")
+        tabla(df)
+        return
+    for variables, titulo in [(["accuracy", "val_accuracy"], "Accuracy por época"),
+                               (["loss", "val_loss"], "Pérdida por época")]:
+        largo = df[["epoca", *variables]].melt("epoca", var_name="Serie", value_name="Valor")
+        largo["epoca"] = pd.to_numeric(largo["epoca"], errors="coerce")
+        largo["Valor"] = pd.to_numeric(largo["Valor"], errors="coerce")
+        chart = alt.Chart(largo).mark_line(point=False).encode(
+            x=alt.X("epoca:Q", title="Época"),
+            y=alt.Y("Valor:Q", title="Accuracy" if "Accuracy" in titulo else "Pérdida"),
+            color="Serie:N",
+            tooltip=["epoca:Q", "Serie:N", alt.Tooltip("Valor:Q", format=".4f")],
+        ).properties(height=300, title=titulo)
+        st.altair_chart(chart, width="stretch")
 
 
-def matriz_confusion(matriz, clases, titulo):
-    fig = go.Figure(go.Heatmap(
-        z=matriz, x=clases, y=clases, colorscale="Blues", showscale=True,
-        hovertemplate="Real: %{y}<br>Predicción: %{x}<br>Ejemplos: %{z}<extra></extra>",
-        colorbar=dict(title="Conteo", thickness=14),
-    ))
-    for fila in range(len(clases)):
-        for columna in range(len(clases)):
-            valor = int(matriz[fila][columna])
-            fig.add_annotation(x=clases[columna], y=clases[fila], text=str(valor),
-                               showarrow=False, font=dict(color="white" if valor >= np.max(matriz)*.52 else "#17243B", size=15))
-    fig.update_layout(title=dict(text=titulo, font=dict(size=15)),
-                      xaxis_title="Predicción", yaxis_title="Clase real")
-    fig.update_yaxes(autorange="reversed")
-    return estilo(fig, altura=390)
-
-
-def mostrar_grafico(fig, key):
-    st.plotly_chart(fig, use_container_width=True, config={"displaylogo": False, "scrollZoom": False}, key=key)
-
-
-inicializar_estado()
-tab_cnn, tab_lstm, tab_ann = st.tabs(["🦟 CNN · Mosquitos", "📈 LSTM · Dengue", "🛡️ ANN · Prevención"])
+tab_cnn, tab_lstm, tab_ann = st.tabs([
+    "🔬 CNN y MobileNetV2", "📈 LSTM y comparativas", "🛡️ ANN"
+])
 
 with tab_cnn:
-    st.markdown("### Clasificación de especies de mosquitos")
-    st.caption("CNN propia frente a MobileNetV2 · Métricas simuladas sobre una evaluación ilustrativa")
-    cabecera_controles("cnn")
+    st.subheader("Identificación de especies de mosquitos")
+    cnn_metrics = cargar(CNN / "cnn_validation_metrics.csv")
+    # Archivo futuro: debe contener las mismas columnas que cnn_validation_metrics.csv.
+    mobilenet_path = CNN / "mobilenetv2_validation_metrics.csv"
+    mobile_metrics = cargar(mobilenet_path)
+    dfs = [d for d in (cnn_metrics, mobile_metrics) if d is not None and not d.empty]
+    if dfs:
+        resumen_cnn = pd.concat(dfs, ignore_index=True)
+        columnas = ["Modelo", "Accuracy_validation", "Precision_macro_validation",
+                    "Recall_macro_validation", "F1_macro_validation", "Mejor_val_loss",
+                    "Epoca_mejor_val_loss", "Epocas_ejecutadas"]
+        existentes = [c for c in columnas if c in resumen_cnn.columns]
+        tabla(resumen_cnn[existentes])
+        metricas = ["Accuracy_validation", "Precision_macro_validation",
+                    "Recall_macro_validation", "F1_macro_validation"]
+        disponibles = [c for c in metricas if c in resumen_cnn.columns]
+        if "Modelo" in resumen_cnn and disponibles:
+            largo = resumen_cnn[["Modelo", *disponibles]].melt(
+                id_vars="Modelo", var_name="Métrica", value_name="Valor")
+            largo["Valor"] = pd.to_numeric(largo["Valor"], errors="coerce")
+            grafico = alt.Chart(largo).mark_bar().encode(
+                x=alt.X("Métrica:N", title=None),
+                y=alt.Y("Valor:Q", scale=alt.Scale(domain=[0, 1]), title="Puntuación"),
+                color="Modelo:N", xOffset="Modelo:N",
+                tooltip=["Modelo:N", "Métrica:N", alt.Tooltip("Valor:Q", format=".3f")],
+            ).properties(height=330, title="Métricas de validación por modelo")
+            st.altair_chart(grafico, width="stretch")
+    else:
+        st.info("Todavía no hay métricas de CNN disponibles.")
 
-    panel, abierto = seccion("cnn", 0, "Indicadores destacados del modelo de demostración MobileNetV2")
-    if abierto:
-        with panel:
-            tarjetas({nombre: f"{valor:.1f}%" for nombre, valor in CNN["MobileNetV2"].items()})
-            st.caption("Estos indicadores son ficticios; se reemplazarán por resultados reales.")
+    if mobile_metrics is None:
+        st.info(
+            "**MobileNetV2: métricas pendientes.** Cuando Mau entregue el CSV, guárdenlo "
+            "en `data/processed/cnn/mobilenetv2_validation_metrics.csv` con las columnas "
+            "de `cnn_validation_metrics.csv`. Esta página lo leerá automáticamente al actualizarse. "
+            "Para comparar ambos modelos, deben evaluarse con el mismo conjunto de imágenes."
+        )
+    else:
+        st.success("Se encontró el archivo de métricas de MobileNetV2.")
 
-    panel, abierto = seccion("cnn", 1, "Comparación de Accuracy, Precision, Recall y F1-score")
-    if abierto:
-        with panel:
-            mostrar_grafico(barras_comparadas(CNN, list(CNN["CNN propia"].keys()), maximo=105), "graf_cnn")
-            st.caption("Los porcentajes más altos suelen indicar mejor rendimiento; se debe revisar también el equilibrio entre clases.")
-
-    panel, abierto = seccion("cnn", 2, "Ejemplos de matriz de confusión; filas = clase real, columnas = predicción")
-    if abierto:
-        with panel:
-            modelo_cnn = st.selectbox("Modelo", list(CNN.keys()), key="modelo_mc_cnn")
-            matrices = {
-                "CNN propia": [[95, 12], [18, 85]],
-                "MobileNetV2": [[101, 6], [11, 92]],
-            }
-            mostrar_grafico(matriz_confusion(matrices[modelo_cnn], ["Aedes", "Culex"], f"Matriz de confusión · {modelo_cnn}"), "mc_cnn")
-            st.caption("Matriz ilustrativa binaria. Se adaptará a las especies efectivas del modelo CNN y sus etiquetas reales.")
-
-    panel, abierto = seccion("cnn", 3, "Comparación tabular para consulta y descarga")
-    if abierto:
-        with panel:
-            tabla = pd.DataFrame(CNN).T.rename_axis("Modelo").reset_index()
-            st.dataframe(tabla, hide_index=True, use_container_width=True,
-                         column_config={k: st.column_config.NumberColumn(k, format="%.1f%%") for k in CNN["CNN propia"]})
-            st.download_button("Descargar CSV demostrativo", tabla.to_csv(index=False).encode("utf-8-sig"),
-                               "vectoria_cnn_demo.csv", "text/csv", key="dl_cnn")
+    st.markdown("#### Matriz de confusión — CNN propia (validación)")
+    predicciones = cargar(CNN / "cnn_validation_predictions.csv")
+    if predicciones is not None and {"class_name", "pred_class_name"}.issubset(predicciones.columns):
+        clases = list(dict.fromkeys(
+            list(predicciones["class_name"].dropna()) +
+            list(predicciones["pred_class_name"].dropna())
+        ))
+        confusion = pd.crosstab(
+            pd.Categorical(predicciones["class_name"], categories=clases),
+            pd.Categorical(predicciones["pred_class_name"], categories=clases),
+            dropna=False,
+        )
+        confusion = confusion.reindex(index=clases, columns=clases, fill_value=0)
+        confusion.index.name = "Clase real"
+        matriz_confusion(confusion.reset_index(), "CNN propia: matriz derivada de predicciones")
+        st.caption(f"Predicciones registradas: {len(predicciones):,}.")
+    else:
+        st.info("No se encontró el CSV de predicciones para obtener la matriz de confusión CNN.")
 
 with tab_lstm:
-    st.markdown("### Predicción semanal de casos de dengue")
-    st.caption("SimpleRNN frente a LSTM · Valores simulados, no son predicciones reales de 2025 o 2026")
-    cabecera_controles("lstm")
+    st.subheader("Predicción de casos de dengue")
+    comparacion = cargar(DATA / "metricas_lstm.csv")
+    if comparacion is not None and not comparacion.empty:
+        tabla(comparacion)
+        if {"Modelo", "RMSE", "MAE"}.issubset(comparacion.columns):
+            largo = comparacion.melt(id_vars="Modelo", value_vars=["RMSE", "MAE"],
+                                     var_name="Métrica", value_name="Error")
+            largo["Error"] = pd.to_numeric(largo["Error"], errors="coerce")
+            grafico = alt.Chart(largo).mark_bar().encode(
+                x=alt.X("Modelo:N", title=None, axis=alt.Axis(labelAngle=-25)),
+                y=alt.Y("Error:Q", title="Error (casos)"),
+                color="Métrica:N", xOffset="Métrica:N",
+                tooltip=["Modelo:N", "Métrica:N", alt.Tooltip("Error:Q", format=".2f")],
+            ).properties(height=340, title="Comparación RMSE y MAE (menor es mejor)")
+            st.altair_chart(grafico, width="stretch")
+    else:
+        st.info("No se encontró `metricas_lstm.csv`.")
 
-    panel, abierto = seccion("lstm", 0, "Errores de ejemplo del modelo LSTM")
-    if abierto:
-        with panel:
-            tarjetas({"RMSE · LSTM": f"{LSTM['LSTM']['RMSE']:.1f} casos", "MAE · LSTM": f"{LSTM['LSTM']['MAE']:.1f} casos"})
-            st.caption("En RMSE y MAE, los valores menores indican menos error. No son porcentajes.")
-
-    panel, abierto = seccion("lstm", 1, "Comparación de RMSE y MAE entre modelos")
-    if abierto:
-        with panel:
-            mostrar_grafico(barras_comparadas(LSTM, ["RMSE", "MAE"], unidades=""), "graf_lstm_errores")
-            st.caption("Los dos modelos deben evaluarse sobre el mismo conjunto de prueba para comparar sus errores.")
-
-    panel, abierto = seccion("lstm", 2, "Serie temporal de ejemplo: valores observados y estimaciones")
-    if abierto:
-        with panel:
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=SEMANAS, y=REAL, mode="lines+markers", name="Casos reales (demo)", line=dict(color=AZUL, width=3)))
-            fig.add_trace(go.Scatter(x=SEMANAS, y=PRED_LSTM, mode="lines+markers", name="LSTM (demo)", line=dict(color=ROJO, width=2)))
-            fig.add_trace(go.Scatter(x=SEMANAS, y=PRED_RNN, mode="lines+markers", name="SimpleRNN (demo)", line=dict(color=AZUL_CLARO, width=2, dash="dash")))
-            fig.update_layout(xaxis_title="Semanas ilustrativas", yaxis_title="Casos de dengue")
-            mostrar_grafico(estilo(fig, altura=440), "graf_lstm_lineas")
-            st.caption("Las semanas S1–S12 son ficticias. Esta gráfica no calcula RMSE/MAE ni representa un pronóstico operativo.")
-
-    panel, abierto = seccion("lstm", 3, "Tabla de métricas y detalle semanal de ejemplo")
-    if abierto:
-        with panel:
-            st.markdown("**Métricas de error**")
-            tabla = pd.DataFrame(LSTM).T.rename_axis("Modelo").reset_index()
-            st.dataframe(tabla, hide_index=True, use_container_width=True)
-            st.markdown("**Comparación por semana (demostración)**")
-            serie = pd.DataFrame({"Semana": SEMANAS, "Real": REAL, "LSTM": PRED_LSTM, "SimpleRNN": PRED_RNN})
-            st.dataframe(serie, hide_index=True, use_container_width=True)
-            st.download_button("Descargar serie CSV demostrativa", serie.to_csv(index=False).encode("utf-8-sig"),
-                               "vectoria_lstm_demo.csv", "text/csv", key="dl_lstm")
+    st.markdown("#### Validación cruzada y candidatos")
+    resumen = cargar(DATA / "cv_resultados_resumen.csv")
+    detalle = cargar(DATA / "cv_resultados_detalle.csv")
+    if resumen is not None and not resumen.empty:
+        tabla(resumen)
+        if {"Modelo", "RMSE_mean"}.issubset(resumen.columns):
+            mostrar = resumen[["Modelo", "RMSE_mean"]].copy()
+            mostrar["RMSE_mean"] = pd.to_numeric(mostrar["RMSE_mean"], errors="coerce")
+            grafico_barras(mostrar, "Modelo", "RMSE_mean", "RMSE promedio por candidato")
+    else:
+        st.info("No se encontró `cv_resultados_resumen.csv`.")
+    if detalle is not None and not detalle.empty:
+        with st.expander("Ver resultados por fold y semilla"):
+            tabla(detalle)
 
 with tab_ann:
-    st.markdown("### Recomendaciones preventivas")
-    st.caption("Evaluación ilustrativa de un modelo ANN de clasificación")
-    cabecera_controles("ann")
+    st.subheader("Clasificación de recomendaciones preventivas")
+    metricas_ann = cargar(DATA / "metricas_ann_v2.csv")
+    if metricas_ann is not None and not metricas_ann.empty:
+        if "accuracy_global" in metricas_ann.columns:
+            accuracy = numero(metricas_ann["accuracy_global"].iloc[0])
+            if accuracy is not None:
+                st.metric("Accuracy de prueba", f"{accuracy:.2%}")
+        tabla(metricas_ann)
+        if {"clase", "f1_score"}.issubset(metricas_ann.columns):
+            solo_clases = metricas_ann[~metricas_ann["clase"].isin(["macro avg", "weighted avg"])].copy()
+            solo_clases["f1_score"] = pd.to_numeric(solo_clases["f1_score"], errors="coerce")
+            grafico_barras(solo_clases, "clase", "f1_score", "F1-score por recomendación")
+    else:
+        st.info("No se encontró `metricas_ann_v2.csv`.")
 
-    panel, abierto = seccion("ann", 0, "Indicadores principales de clasificación")
-    if abierto:
-        with panel:
-            tarjetas({nombre: f"{valor:.1f}%" for nombre, valor in ANN.items()})
-            st.caption("Valores de demostración, no corresponden a la evaluación de la ANN del equipo.")
+    st.markdown("#### Matriz de confusión")
+    matriz = cargar(DATA / "matriz_confusion_ann_v2.csv")
+    if matriz is not None:
+        matriz_confusion(matriz, "ANN: matriz de confusión de prueba")
+    else:
+        st.info("No se encontró la matriz de confusión ANN.")
 
-    panel, abierto = seccion("ann", 1, "Accuracy, Precision, Recall y F1-score")
-    if abierto:
-        with panel:
-            fig = go.Figure(go.Bar(x=list(ANN.keys()), y=list(ANN.values()),
-                                   marker_color=[AZUL, AZUL_CLARO, ROJO, "#CA6E27"],
-                                   text=[f"{x:.1f}%" for x in ANN.values()], textposition="outside"))
-            fig.update_layout(yaxis_title="Porcentaje (%)", showlegend=False)
-            fig.update_yaxes(range=[0, 105])
-            mostrar_grafico(estilo(fig), "graf_ann")
-
-    panel, abierto = seccion("ann", 2, "Ejemplo binario pendiente de ajustar a las categorías de acción reales")
-    if abierto:
-        with panel:
-            mostrar_grafico(matriz_confusion([[86, 14], [12, 88]], ["Acción A", "Acción B"], "Matriz de confusión · ANN (demo)"), "mc_ann")
-            st.caption("Las clases A/B y sus conteos son ficticios. Si la ANN es multietiqueta o genera varias recomendaciones, esta visualización se adaptará.")
-
-    panel, abierto = seccion("ann", 3, "Resultados resumidos y exportables")
-    if abierto:
-        with panel:
-            tabla = pd.DataFrame([{"Métrica": m, "Resultado (%)": v} for m, v in ANN.items()])
-            st.dataframe(tabla, hide_index=True, use_container_width=True,
-                         column_config={"Resultado (%)": st.column_config.NumberColumn(format="%.1f%%")})
-            st.download_button("Descargar CSV demostrativo", tabla.to_csv(index=False).encode("utf-8-sig"),
-                               "vectoria_ann_demo.csv", "text/csv", key="dl_ann")
+    st.markdown("#### Evolución del entrenamiento")
+    historial = cargar(DATA / "historial_entrenamiento_ann_v2.csv")
+    if historial is not None:
+        grafico_historial(historial)
+    else:
+        st.info("No se encontró el historial de entrenamiento ANN.")
 
 st.divider()
-st.caption("VectorIA · Interfaz de métricas en fase de demostración. Sustituir métricas, matrices y series temporales después de evaluar los modelos reales.")
+st.caption(
+    "Los resultados se calculan sobre los conjuntos indicados en cada archivo. "
+    "No compare accuracy de clasificación con RMSE/MAE de pronóstico: miden tareas distintas."
+)

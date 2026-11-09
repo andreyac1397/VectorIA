@@ -2,6 +2,8 @@
   "model_name": "VectorIA CNN Mosquitos",
   "model_file": "cnn_mosquitos.keras",
   "model_type": "CNN",
+  "model_status": "selected_final_model",
+
   "input_width": 128,
   "input_height": 128,
   "input_channels": 3,
@@ -9,18 +11,38 @@
   "resize_method": "resize_with_pad",
   "input_range": [0, 255],
   "normalization_inside_model": true,
+
   "classes": [
     "Aedes aegypti",
     "Aedes albopictus",
     "Culex"
   ],
+
   "class_ids": {
     "Aedes aegypti": 0,
     "Aedes albopictus": 1,
     "Culex": 2
   },
+
   "output_activation": "softmax",
-  "validation_f1_macro": 0.9262,
-  "validation_accuracy": 0.9223,
-  "notes": "Clasificador de mosquitos adultos. Para mejores resultados, el mosquito debe ser claramente visible y ocupar una parte relevante de la imagen. El modelo no diagnostica dengue en personas."
+
+  "validation_metrics": {
+    "accuracy": 0.9223,
+    "f1_macro": 0.9262
+  },
+
+  "test_metrics": {
+    "accuracy": 0.9374,
+    "precision_macro": 0.9402,
+    "recall_macro": 0.9417,
+    "f1_macro": 0.9409
+  },
+
+  "test_f1_per_class": {
+    "Aedes aegypti": 0.9736,
+    "Aedes albopictus": 0.9168,
+    "Culex": 0.9323
+  },
+
+  "notes": "Modelo CNN propio seleccionado para VectorIA. Para mejores resultados, el mosquito debe ser claramente visible y ocupar una parte relevante de la fotografía. Los valores Softmax se reportan como scores del modelo y no como probabilidades calibradas. VectorIA no diagnostica dengue en personas."
 }
