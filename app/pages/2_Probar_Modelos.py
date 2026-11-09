@@ -3,6 +3,7 @@
 import os
 import sys
 import math
+import hashlib
 from datetime import date
 from pathlib import Path
 
@@ -65,6 +66,7 @@ st.markdown(
 
 for clave in (
     "cnn_resultado",
+    "cnn_imagen_firma",
     "lstm_resultado",
     "ann_resultado",
     "ann_contexto_preparado",
@@ -72,10 +74,6 @@ for clave in (
 ):
     if clave not in st.session_state:
         st.session_state[clave] = None
-
-if "ann_aegypti" not in st.session_state:
-    st.session_state.ann_aegypti = "No"
-
 
 # ============================================================
 # 3. COMUNICACIÓN CON FASTAPI
@@ -328,11 +326,6 @@ def obtener_contexto_ann(resultado_ann):
     return contexto
 
 
-def limpiar_recomendacion_ann():
-    """Evita mostrar una recomendación anterior al cambiar Aedes."""
-    st.session_state.ann_resultado = None
-
-
 # ============================================================
 # 5. ENCABEZADO
 # ============================================================
@@ -385,6 +378,16 @@ with tab_cnn:
             key="imagen_cnn",
         )
 
+        # Si se cambia o elimina la fotografía, invalidar la clasificación anterior.
+        firma_imagen = (
+            hashlib.sha256(imagen.getvalue()).hexdigest()
+            if imagen is not None else None
+        )
+        if st.session_state.cnn_imagen_firma != firma_imagen:
+            st.session_state.cnn_imagen_firma = firma_imagen
+            st.session_state.cnn_resultado = None
+            st.session_state.ann_resultado = None
+
         if imagen is not None:
             st.image(
                 imagen,
@@ -409,14 +412,6 @@ with tab_cnn:
 
             if resultado is not None:
                 st.session_state.cnn_resultado = resultado
-                especie_cnn = extraer_especie(resultado)
-                if modelo_disponible(resultado) and especie_cnn in (
-                    "Aedes aegypti", "Aedes albopictus", "Culex"
-                ):
-                    # La ANN usa detección de Aedes aegypti específicamente.
-                    st.session_state.ann_aegypti = (
-                        "Sí" if especie_cnn == "Aedes aegypti" else "No"
-                    )
 
     with columna_resultado:
 
@@ -840,25 +835,31 @@ with tab_ann:
                 key=f"ann_semana_solo_lectura_{clave_actual}",
             )
 
+            # El valor de Aedes proviene únicamente de MobileNetV2.
             deteccion_cnn_disponible = (
                 especie in ("Aedes aegypti", "Aedes albopictus", "Culex")
             )
-            aegypti = st.radio(
+            aegypti_detectado = (
+                1 if especie == "Aedes aegypti" else 0
+            ) if deteccion_cnn_disponible else None
+
+            st.text_input(
                 "¿Se detectó Aedes aegypti?",
-                options=["Sí", "No"],
-                horizontal=True,
-                key="ann_aegypti",
-                on_change=limpiar_recomendacion_ann,
-                disabled=deteccion_cnn_disponible,
+                value=(
+                    "Sí" if aegypti_detectado == 1 else "No"
+                    if aegypti_detectado == 0 else "Sin clasificar"
+                ),
+                disabled=True,
             )
             if deteccion_cnn_disponible:
                 st.caption(
-                    f"Detección automática desde MobileNetV2: {especie}. "
-                    "Campo bloqueado para mantener la clasificación de la CNN."
+                    f"Detección automática de MobileNetV2: {especie}. "
+                    f"Valor enviado a ANN: {aegypti_detectado}."
                 )
             else:
                 st.caption(
-                    "Selección manual hasta ejecutar la CNN."
+                    "Primero clasifique una fotografía con la CNN. "
+                    "No se asignará un cero por defecto."
                 )
 
         if datos_lstm_ann is None:
@@ -868,6 +869,8 @@ with tab_ann:
                 "El LSTM devolvió casos y fecha, pero no se prepararon "
                 "las variables de ANN. Genere nuevamente la predicción."
             )
+        elif not deteccion_cnn_disponible:
+            st.info("Clasifique una imagen con MobileNetV2 para habilitar ANN.")
 
         if contexto_listo:
             origen_clima = contexto_ann.get("origen_clima")
@@ -887,13 +890,13 @@ with tab_ann:
             "Generar recomendación",
             type="primary",
             use_container_width=True,
-            disabled=not contexto_listo,
+            disabled=not (contexto_listo and deteccion_cnn_disponible),
         ):
             # Enviamos las variables ya preparadas; no se recalculan.
             datos_ann = {
                 "casos_pred_4sem": int(contexto_ann["casos_pred_4sem"]),
                 "fecha_referencia": contexto_ann["fecha_referencia"],
-                "aegypti_det": 1 if aegypti == "Sí" else 0,
+                "aegypti_det": aegypti_detectado,
                 "umbral_endemico": float(contexto_ann["umbral_endemico"]),
                 "lluvia_14d_mm": float(contexto_ann["lluvia_14d_mm"]),
                 "temp_max": float(contexto_ann["temp_max"]),
@@ -922,9 +925,8 @@ with tab_ann:
     if resultado is None:
 
         st.info(
-            "Genere primero la predicción LSTM y seleccione "
-            "si se detectó Aedes aegypti para obtener "
-            "una recomendación."
+            "Genere primero una predicción LSTM y clasifique "
+            "una imagen con MobileNetV2 para obtener una recomendación."
         )
 
     elif not modelo_disponible(resultado):
