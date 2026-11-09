@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from api.routes import cnn, lstm, ann
+from api.routes import cnn, lstm, ann, lstm_provincial
 
 # Crear la API
 app = FastAPI(
@@ -23,13 +23,16 @@ app.include_router(cnn.router)
 app.include_router(lstm.router)
 app.include_router(ann.router)
 
+# Bonus: predicción provincial
+app.include_router(lstm_provincial.router)
+
 # Ruta principal
 @app.get("/")
 def inicio():
     return {
         "proyecto": "VectorIA",
         "estado": "API funcionando",
-        "modelos": ["CNN", "LSTM", "ANN"]
+        "modelos": ["CNN", "LSTM", "ANN", "LSTM Provincial"]
     }
 
 # Ruta para comprobar el estado de la API

@@ -775,91 +775,129 @@ with tab_ann:
             else:
                 st.caption("LSTM: sin resultado disponible")
 
-    # Los valores ya aparecen antes de ejecutar el clasificador ANN.
+    # --------------------------------------------------------
+    # Simulador ANN: conservar el contexto automático y editar una copia.
+    # --------------------------------------------------------
+    deteccion_cnn_disponible = especie in (
+        "Aedes aegypti", "Aedes albopictus", "Culex"
+    )
+    aegypti_original = (
+        "Sí" if especie == "Aedes aegypti" else "No"
+    ) if deteccion_cnn_disponible else "Sin clasificar"
+
+    # Reconfigurar el formulario solamente si cambia el pronóstico
+    # o la clasificación CNN; no perder cambios al mover controles.
+    origen_simulacion = (clave_actual, especie, contexto_listo)
+    if st.session_state.get("ann_sim_origen") != origen_simulacion:
+        st.session_state.ann_sim_origen = origen_simulacion
+        if contexto_listo:
+            st.session_state.ann_sim_casos = int(contexto_ann["casos_pred_4sem"])
+            st.session_state.ann_sim_umbral = float(contexto_ann["umbral_endemico"])
+            st.session_state.ann_sim_lluvia = float(contexto_ann["lluvia_14d_mm"])
+            st.session_state.ann_sim_temperatura = float(contexto_ann["temp_max"])
+        else:
+            st.session_state.ann_sim_casos = 0
+            st.session_state.ann_sim_umbral = 0.0
+            st.session_state.ann_sim_lluvia = 0.0
+            st.session_state.ann_sim_temperatura = 0.0
+        st.session_state.ann_sim_aegypti = aegypti_original
+        st.session_state.ann_resultado = None
+
+    def invalidar_recomendacion_ann():
+        """Evita mostrar como vigente una recomendación con datos antiguos."""
+        st.session_state.ann_resultado = None
+
+    def restablecer_simulador_ann():
+        """Recupera las entradas originales sin modificar los modelos ni CSV."""
+        if not contexto_listo:
+            return
+        st.session_state.ann_sim_casos = int(contexto_ann["casos_pred_4sem"])
+        st.session_state.ann_sim_umbral = float(contexto_ann["umbral_endemico"])
+        st.session_state.ann_sim_lluvia = float(contexto_ann["lluvia_14d_mm"])
+        st.session_state.ann_sim_temperatura = float(contexto_ann["temp_max"])
+        st.session_state.ann_sim_aegypti = aegypti_original
+        st.session_state.ann_resultado = None
+
     with st.container(border=True):
-        st.markdown("#### Variables de entrada")
+        st.markdown("#### Variables de entrada · Simulador ¿Qué pasaría si?")
         st.caption(
-            "Casos y fecha: predicción LSTM. Umbral, lluvia, temperatura "
-            "y semana: referencias preparadas por ANN. "
-            "Los campos son de solo lectura."
+            "Los valores se cargan automáticamente desde LSTM, CNN y las "
+            "referencias históricas de ANN. Puede modificarlos para simular "
+            "una recomendación. No se cambian las predicciones ni los datasets."
         )
 
         col1, col2 = st.columns(2, gap="large")
 
         with col1:
-            st.number_input(
+            casos_simulados = st.number_input(
                 "Casos pronosticados (4 semanas)",
                 min_value=0,
-                value=int(contexto_ann["casos_pred_4sem"]) if contexto_listo else 0,
                 step=1,
-                disabled=True,
-                key=f"ann_casos_solo_lectura_{clave_actual}",
+                disabled=not contexto_listo,
+                key="ann_sim_casos",
+                on_change=invalidar_recomendacion_ann,
             )
-            st.number_input(
+            umbral_simulado = st.number_input(
                 "Umbral endémico",
                 min_value=0.0,
-                value=float(contexto_ann["umbral_endemico"]) if contexto_listo else 0.0,
+                step=1.0,
                 format="%.2f",
-                disabled=True,
-                key=f"ann_umbral_solo_lectura_{clave_actual}",
+                disabled=not contexto_listo,
+                key="ann_sim_umbral",
+                on_change=invalidar_recomendacion_ann,
             )
-            st.number_input(
+            lluvia_simulada = st.number_input(
                 "Lluvia acumulada en 14 días (mm)",
                 min_value=0.0,
-                value=float(contexto_ann["lluvia_14d_mm"]) if contexto_listo else 0.0,
+                step=1.0,
                 format="%.2f",
-                disabled=True,
-                key=f"ann_lluvia_solo_lectura_{clave_actual}",
+                disabled=not contexto_listo,
+                key="ann_sim_lluvia",
+                on_change=invalidar_recomendacion_ann,
             )
 
         with col2:
-            st.number_input(
+            temperatura_simulada = st.number_input(
                 "Temperatura máxima (°C)",
-                value=float(contexto_ann["temp_max"]) if contexto_listo else 0.0,
+                min_value=-20.0,
+                max_value=60.0,
+                step=0.5,
                 format="%.2f",
-                disabled=True,
-                key=f"ann_temperatura_solo_lectura_{clave_actual}",
+                disabled=not contexto_listo,
+                key="ann_sim_temperatura",
+                on_change=invalidar_recomendacion_ann,
             )
             st.text_input(
                 "Fecha de referencia",
-                value=contexto_ann["fecha_referencia"] if contexto_listo else "Sin predicción",
+                value=(contexto_ann["fecha_referencia"]
+                       if contexto_listo else "Sin predicción"),
                 disabled=True,
-                key=f"ann_fecha_solo_lectura_{clave_actual}",
             )
             st.number_input(
                 "Semana epidemiológica",
                 min_value=0,
-                value=int(contexto_ann["semana_epi"]) if contexto_listo else 0,
+                max_value=53,
+                value=(int(contexto_ann["semana_epi"])
+                       if contexto_listo else 0),
                 step=1,
                 disabled=True,
-                key=f"ann_semana_solo_lectura_{clave_actual}",
             )
-
-            # El valor de Aedes proviene únicamente de MobileNetV2.
-            deteccion_cnn_disponible = (
-                especie in ("Aedes aegypti", "Aedes albopictus", "Culex")
-            )
-            aegypti_detectado = (
-                1 if especie == "Aedes aegypti" else 0
-            ) if deteccion_cnn_disponible else None
-
-            st.text_input(
+            opcion_aegypti = st.selectbox(
                 "¿Se detectó Aedes aegypti?",
-                value=(
-                    "Sí" if aegypti_detectado == 1 else "No"
-                    if aegypti_detectado == 0 else "Sin clasificar"
-                ),
-                disabled=True,
+                options=["Sin clasificar", "Sí", "No"],
+                disabled=not contexto_listo,
+                key="ann_sim_aegypti",
+                on_change=invalidar_recomendacion_ann,
             )
             if deteccion_cnn_disponible:
                 st.caption(
                     f"Detección automática de MobileNetV2: {especie}. "
-                    f"Valor enviado a ANN: {aegypti_detectado}."
+                    "Puede cambiarla para simular otro escenario."
                 )
             else:
                 st.caption(
-                    "Primero clasifique una fotografía con la CNN. "
-                    "No se asignará un cero por defecto."
+                    "Sin clasificación CNN: seleccione Sí o No solo si "
+                    "desea simular manualmente la detección."
                 )
 
         if datos_lstm_ann is None:
@@ -869,8 +907,11 @@ with tab_ann:
                 "El LSTM devolvió casos y fecha, pero no se prepararon "
                 "las variables de ANN. Genere nuevamente la predicción."
             )
-        elif not deteccion_cnn_disponible:
-            st.info("Clasifique una imagen con MobileNetV2 para habilitar ANN.")
+        elif opcion_aegypti == "Sin clasificar":
+            st.info(
+                "Clasifique una imagen con MobileNetV2 o seleccione "
+                "manualmente la detección para una simulación."
+            )
 
         if contexto_listo:
             origen_clima = contexto_ann.get("origen_clima")
@@ -886,20 +927,45 @@ with tab_ann:
                 with st.expander("Información sobre el origen de los datos"):
                     st.write(advertencia)
 
-        if st.button(
-            "Generar recomendación",
-            type="primary",
-            use_container_width=True,
-            disabled=not (contexto_listo and deteccion_cnn_disponible),
-        ):
-            # Enviamos las variables ya preparadas; no se recalculan.
+        simulacion_modificada = contexto_listo and (
+            int(casos_simulados) != int(contexto_ann["casos_pred_4sem"])
+            or float(umbral_simulado) != float(contexto_ann["umbral_endemico"])
+            or float(lluvia_simulada) != float(contexto_ann["lluvia_14d_mm"])
+            or float(temperatura_simulada) != float(contexto_ann["temp_max"])
+            or opcion_aegypti != aegypti_original
+        )
+        if simulacion_modificada:
+            st.info(
+                "Modo simulación: modificó valores originales. "
+                "La siguiente recomendación usará los valores editados."
+            )
+
+        col_generar, col_restaurar = st.columns([2, 1], gap="medium")
+        with col_generar:
+            generar = st.button(
+                "Generar recomendación",
+                type="primary",
+                use_container_width=True,
+                disabled=not (contexto_listo and opcion_aegypti != "Sin clasificar"),
+            )
+        with col_restaurar:
+            st.button(
+                "Restablecer valores",
+                use_container_width=True,
+                disabled=not contexto_listo,
+                on_click=restablecer_simulador_ann,
+            )
+
+        if generar:
+            # El endpoint actual acepta las seis variables directamente.
+            # La fecha y la semana epidemiológica siguen siendo coherentes.
             datos_ann = {
-                "casos_pred_4sem": int(contexto_ann["casos_pred_4sem"]),
+                "casos_pred_4sem": int(casos_simulados),
                 "fecha_referencia": contexto_ann["fecha_referencia"],
-                "aegypti_det": aegypti_detectado,
-                "umbral_endemico": float(contexto_ann["umbral_endemico"]),
-                "lluvia_14d_mm": float(contexto_ann["lluvia_14d_mm"]),
-                "temp_max": float(contexto_ann["temp_max"]),
+                "aegypti_det": 1 if opcion_aegypti == "Sí" else 0,
+                "umbral_endemico": float(umbral_simulado),
+                "lluvia_14d_mm": float(lluvia_simulada),
+                "temp_max": float(temperatura_simulada),
                 "semana_epi": int(contexto_ann["semana_epi"]),
             }
 
@@ -925,8 +991,9 @@ with tab_ann:
     if resultado is None:
 
         st.info(
-            "Genere primero una predicción LSTM y clasifique "
-            "una imagen con MobileNetV2 para obtener una recomendación."
+            "Genere una predicción LSTM y clasifique una imagen con MobileNetV2 "
+            "(o seleccione la detección manualmente para simular), "
+            "y pulse Generar recomendación."
         )
 
     elif not modelo_disponible(resultado):
@@ -1011,3 +1078,4 @@ with tab_ann:
         "para la vigilancia del dengue y no sustituyen "
         "las decisiones de las autoridades sanitarias."
     )
+

@@ -1,0 +1,23 @@
+{
+  "entrenamiento": {
+    "MAE": 12.083,
+    "RMSE": 22.711,
+    "ventanas": 3451,
+    "baseline_estacional_MAE": 21.37,
+    "baseline_estacional_RMSE": 36.674
+  },
+  "validacion_2024": {
+    "MAE": 20.245,
+    "RMSE": 34.599,
+    "ventanas": 364,
+    "baseline_estacional_MAE": 30.962,
+    "baseline_estacional_RMSE": 49.437
+  },
+  "prueba_2025": {
+    "MAE": 9.979,
+    "RMSE": 17.006,
+    "ventanas": 364,
+    "baseline_estacional_MAE": 30.323,
+    "baseline_estacional_RMSE": 48.581
+  }
+}

@@ -1,6 +1,10 @@
 """Mapa histórico cantonal de dengue de VectorIA y espacio para bonus provincial."""
 
 import json
+import os
+from datetime import date
+
+import requests
 import math
 import sys
 from pathlib import Path
@@ -8,7 +12,8 @@ from pathlib import Path
 import pandas as pd
 import plotly.graph_objects as go
 import pydeck as pdk
-from shapely.geometry import shape
+from shapely.geometry import shape, mapping
+from shapely.ops import unary_union
 import streamlit as st
 
 # ============================================================
@@ -498,10 +503,351 @@ with tab_mapa:
         "Sin población cantonal no es posible calcular tasas de incidencia."
     )
 
-with tab_bonus:
-    st.subheader("Predicción provincial · Bonus")
-    st.info(
-        "Este módulo está pendiente de integrar. Utilizará el dataset semanal "
-        "provincial y su modelo predictivo correspondiente; no se generarán "
-        "predicciones provinciales a partir del mapa cantonal histórico."
+# ============================================================
+# 5. BONUS PROVINCIAL (INDEPENDIENTE DEL MAPA CANTONAL)
+# ============================================================
+
+API_PROVINCIAL_URL = os.getenv("VECTORIA_API_URL", "http://127.0.0.1:8000").rstrip("/")
+PROVINCIAS_BONUS = [
+    "Alajuela", "Cartago", "Guanacaste", "Heredia",
+    "Limón", "Puntarenas", "San José",
+]
+COLORES_BONUS = [
+    [255, 245, 204, 225], [255, 211, 132, 230],
+    [254, 166, 75, 235], [246, 106, 54, 240],
+    [204, 45, 52, 245], [128, 22, 51, 250],
+]
+
+
+def _nombre_provincia(nombre):
+    # Homologación mínima entre el GeoJSON cantonal y el modelo.
+    import unicodedata
+    return "".join(
+        letra for letra in unicodedata.normalize("NFD", str(nombre).strip().lower())
+        if unicodedata.category(letra) != "Mn"
     )
+
+
+@st.cache_data(show_spinner=False)
+def geojson_provincial_desde_cantones(archivo_geojson):
+    """Agrupa los mismos polígonos cantonales por provincia; no usa datos históricos."""
+    agrupados = {p: [] for p in PROVINCIAS_BONUS}
+    nombres = {_nombre_provincia(p): p for p in PROVINCIAS_BONUS}
+    for feature in archivo_geojson["features"]:
+        original = feature["properties"]["NAME_1"]
+        provincia = nombres.get(_nombre_provincia(original))
+        if provincia:
+            agrupados[provincia].append(shape(feature["geometry"]))
+    sin_geometria = [p for p, geoms in agrupados.items() if not geoms]
+    if sin_geometria:
+        raise ValueError(f"No se encontraron cantones para: {sin_geometria}")
+    provincias_geo = []
+    puntos = {}
+    for provincia, geometrias in agrupados.items():
+        poligono = unary_union(geometrias)
+        punto = poligono.representative_point()
+        puntos[provincia] = [float(punto.x), float(punto.y)]
+        provincias_geo.append({
+            "type": "Feature",
+            "properties": {"provincia": provincia},
+            "geometry": mapping(poligono),
+        })
+    return {"type": "FeatureCollection", "features": provincias_geo}, puntos
+
+
+def consultar_prediccion_provincial(fecha, provincia):
+    try:
+        respuesta = requests.post(
+            f"{API_PROVINCIAL_URL}/lstm-provincial/predecir-dengue",
+            json={
+                "fecha": fecha.isoformat(),
+                "provincia": None,  # El mapa necesita las siete provincias; la UI filtra después.
+            },
+            timeout=120,
+        )
+        respuesta.raise_for_status()
+        datos = respuesta.json()
+        if datos.get("estado") != "correcto" or not isinstance(datos.get("resultados"), list):
+            raise ValueError("El servicio provincial no devolvió resultados válidos.")
+        return datos
+    except requests.exceptions.ConnectionError:
+        st.error("No se pudo conectar con FastAPI. Verificá que esté encendido en el puerto 8000.")
+    except requests.exceptions.Timeout:
+        st.error("La predicción provincial superó el tiempo de espera de la API.")
+    except requests.exceptions.HTTPError as error:
+        try:
+            detalle = error.response.json().get("detail", error.response.text)
+        except ValueError:
+            detalle = error.response.text
+        st.error(f"Error de FastAPI ({error.response.status_code}): {detalle}")
+    except (ValueError, requests.exceptions.RequestException) as error:
+        st.error(f"No se pudo leer la predicción provincial: {error}")
+    return None
+
+
+def _validar_resultados_provinciales(resultado):
+    filas = []
+    for item in resultado["resultados"]:
+        provincia = item.get("provincia")
+        predicciones = item.get("predicciones")
+        if provincia not in PROVINCIAS_BONUS or not isinstance(predicciones, list) or len(predicciones) != 4:
+            raise ValueError("La API envió provincias o semanas inesperadas.")
+        for pred in predicciones:
+            casos = pred.get("casos_estimados")
+            if (isinstance(casos, bool) or not isinstance(casos, (int, float))
+                    or not math.isfinite(casos) or casos < 0):
+                raise ValueError("La API envió una cantidad de casos inválida.")
+            filas.append({
+                "Provincia": provincia,
+                "Semana": int(pred["semana"]),
+                "Fecha": pd.to_datetime(pred["fecha"]).date(),
+                "Casos estimados": int(round(casos)),
+            })
+    if not filas or pd.DataFrame(filas).duplicated(["Provincia", "Fecha"]).any():
+        raise ValueError("La respuesta provincial está vacía o contiene semanas duplicadas.")
+    return pd.DataFrame(filas)
+
+
+def mapa_provincial_2d(provincias_geo, totales, seleccion):
+    valores = totales[totales["Provincia"] == seleccion] if seleccion != "Todas" else totales
+    resto = [p for p in PROVINCIAS_BONUS if p not in valores["Provincia"].tolist()]
+    fig = go.Figure()
+    if resto:
+        fig.add_trace(go.Choroplethmap(
+            geojson=provincias_geo, locations=resto,
+            z=[1] * len(resto), featureidkey="properties.provincia",
+            colorscale=[[0, "#BCC6D2"], [1, "#BCC6D2"]],
+            showscale=False, marker_opacity=0.65,
+            marker_line_color="#344054", marker_line_width=1.0,
+            text=[f"{p}<br>No seleccionada" for p in resto],
+            hovertemplate="%{text}<extra></extra>",
+        ))
+    if not valores.empty:
+        maximo = max(float(totales["Casos estimados"].max()), 1.0)
+        fig.add_trace(go.Choroplethmap(
+            geojson=provincias_geo,
+            locations=valores["Provincia"],
+            z=valores["Casos estimados"],
+            featureidkey="properties.provincia",
+            zmin=0, zmax=maximo, colorscale="YlOrRd",
+            colorbar={"title": "Casos (4 sem.)", "thickness": 15, "len": 0.75},
+            marker_opacity=0.88, marker_line_color="#344054", marker_line_width=1.0,
+            text=[
+                f"<b>{p}</b><br>Casos estimados (4 semanas): {int(c):,}"
+                for p, c in zip(valores["Provincia"], valores["Casos estimados"])
+            ],
+            hovertemplate="%{text}<extra></extra>",
+        ))
+    fig.update_layout(
+        map={"style": "carto-positron", "center": {"lat": 9.75, "lon": -84.15}, "zoom": 6.7},
+        height=590, margin={"l": 0, "r": 0, "t": 5, "b": 0},
+        paper_bgcolor="#FFFFFF", showlegend=False, font={"color": "#17243B"},
+    )
+    return fig
+
+
+def mapa_provincial_hexagonal(provincias_geo, puntos, totales, seleccion, radio_km, elevacion):
+    maximo = max(float(totales["Casos estimados"].max()), 1.0)
+    por_provincia = dict(zip(totales["Provincia"], totales["Casos estimados"]))
+    hexagonos = []
+    for provincia in PROVINCIAS_BONUS:
+        longitud, latitud = puntos[provincia]
+        radio_metros = radio_km * 1000 * 0.5  # Mismo criterio del mapa cantonal.
+        delta_lat = radio_metros / 111_320
+        delta_lon = radio_metros / (111_320 * max(math.cos(math.radians(latitud)), 0.1))
+        vertices = [
+            [longitud + delta_lon * math.cos(math.radians(60 * i + 30)),
+             latitud + delta_lat * math.sin(math.radians(60 * i + 30))]
+            for i in range(6)
+        ]
+        casos = por_provincia[provincia]
+        if seleccion != "Todas" and provincia != seleccion:
+            color = [170, 180, 192, 180]
+            altura = 70
+            texto = "No seleccionada"
+        elif casos == 0:
+            color = COLORES_BONUS[0]
+            altura = 70
+            texto = "0"
+        else:
+            proporcion = math.log1p(casos) / math.log1p(maximo)
+            color = COLORES_BONUS[min(5, max(0, int(proporcion * 5.999)))]
+            altura = 20000 * elevacion * proporcion
+            texto = f"{casos:,}"
+        hexagonos.append({
+            "polygon": vertices, "fill_color": color,
+            "altura": altura, "casos_texto": texto, "provincia": provincia,
+        })
+    return pdk.Deck(
+        layers=[
+            pdk.Layer("GeoJsonLayer", data=provincias_geo, filled=False, stroked=True,
+                      get_line_color=[62, 77, 104, 140], get_line_width=300,
+                      line_width_min_pixels=0.5, pickable=False),
+            pdk.Layer("PolygonLayer", data=hexagonos, get_polygon="polygon",
+                      get_fill_color="fill_color", get_elevation="altura",
+                      extruded=True, filled=True, stroked=True, wireframe=False,
+                      get_line_color=[65, 65, 70, 180], line_width_min_pixels=1,
+                      pickable=True, auto_highlight=True, opacity=0.95),
+        ],
+        initial_view_state=pdk.ViewState(
+            latitude=9.74, longitude=-84.13, zoom=6.7, pitch=48, bearing=0,
+        ),
+        map_style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
+        tooltip={
+            "html": "<b>{provincia}</b><br/>Casos estimados (4 semanas): {casos_texto}",
+            "style": {"backgroundColor": "#1E376C", "color": "white"},
+        },
+    )
+
+
+with tab_bonus:
+    st.subheader("Predicción provincial de dengue · Bonus LSTM")
+    st.caption(
+        "Pronóstico experimental de cuatro semanas sobre datos provinciales sintéticos "
+        "(2014–2025). Independiente del LSTM nacional y del mapa de calor cantonal."
+    )
+    if "bonus_provincial_resultado" not in st.session_state:
+        st.session_state["bonus_provincial_resultado"] = None
+    if "bonus_provincial_consulta" not in st.session_state:
+        st.session_state["bonus_provincial_consulta"] = None
+
+    c1, c2, c3 = st.columns([1.2, 1.2, 1], gap="medium")
+    with c1:
+        provincia_bonus = st.selectbox(
+            "Provincia", ["Todas"] + PROVINCIAS_BONUS,
+            key="bonus_provincia_elegida",
+        )
+    with c2:
+        fecha_bonus = st.date_input(
+            "Fecha de referencia (2026)", value=date(2026, 1, 4),
+            min_value=date(2026, 1, 1), max_value=date(2026, 12, 27),
+            format="DD/MM/YYYY", key="bonus_fecha_elegida",
+        )
+    with c3:
+        st.write("")
+        st.write("")
+        generar_bonus = st.button(
+            "Generar predicción", type="primary", use_container_width=True,
+            key="bonus_generar_prediccion",
+        )
+
+    consulta_actual = (str(fecha_bonus), provincia_bonus)
+    if generar_bonus:
+        st.session_state["bonus_provincial_resultado"] = None
+        st.session_state["bonus_provincial_consulta"] = None
+        with st.spinner("Consultando LSTM provincial..."):
+            respuesta = consultar_prediccion_provincial(fecha_bonus, provincia_bonus)
+        if respuesta is not None:
+            st.session_state["bonus_provincial_resultado"] = respuesta
+            st.session_state["bonus_provincial_consulta"] = consulta_actual
+
+    resultado_bonus = st.session_state["bonus_provincial_resultado"]
+    if resultado_bonus is None:
+        st.info("Elegí una provincia y una fecha de 2026, y presioná Generar predicción.")
+    elif st.session_state["bonus_provincial_consulta"] != consulta_actual:
+        st.info("Cambiaste los parámetros. Presioná Generar predicción para actualizar el mapa.")
+    else:
+        try:
+            predicciones_bonus = _validar_resultados_provinciales(resultado_bonus)
+            provincias_geo, puntos_geo = geojson_provincial_desde_cantones(geojson)
+        except (ValueError, KeyError, TypeError) as error:
+            st.error(f"No se pudieron preparar los resultados provinciales: {error}")
+        else:
+            totales_bonus = (
+                predicciones_bonus.groupby("Provincia", as_index=False)["Casos estimados"]
+                .sum()
+            )
+            total_predicho = int(
+                totales_bonus["Casos estimados"].sum()
+                if provincia_bonus == "Todas"
+                else totales_bonus.loc[
+                    totales_bonus["Provincia"] == provincia_bonus, "Casos estimados"
+                ].sum()
+            )
+            st.metric(
+                "Casos estimados en 4 semanas" if provincia_bonus != "Todas"
+                else "Casos estimados en las 7 provincias (4 semanas)",
+                f"{total_predicho:,}",
+            )
+            st.caption(
+                f"Semanas pronosticadas: {resultado_bonus['primera_semana']} "
+                f"y tres semanas posteriores. El modelo toma el domingo coincidente "
+                f"o siguiente a la fecha seleccionada."
+            )
+
+            vista_bonus = st.radio(
+                "Tipo de mapa provincial",
+                ["Hexágonos 3D", "Provincias 2D"],
+                horizontal=True, key="bonus_tipo_mapa",
+            )
+            with st.container(border=True):
+                if vista_bonus == "Hexágonos 3D":
+                    br, be = st.columns(2, gap="medium")
+                    with br:
+                        radio_bonus = st.slider(
+                            "Radio de hexágonos (km)", 8, 45, 19, step=1,
+                            key="bonus_radio_hexagonos",
+                        )
+                    with be:
+                        elevacion_bonus = st.slider(
+                            "Escala de altura", 0.1, 2.0, 0.65, step=0.05,
+                            key="bonus_altura_hexagonos",
+                        )
+                    col_mapa, col_leyenda = st.columns([11, 2], gap="small")
+                    with col_mapa:
+                        st.pydeck_chart(
+                            mapa_provincial_hexagonal(
+                                provincias_geo, puntos_geo, totales_bonus,
+                                provincia_bonus, radio_bonus, elevacion_bonus,
+                            ),
+                            use_container_width=True, height=610,
+                        )
+                    with col_leyenda:
+                        mostrar_leyenda_hexagonal(
+                            totales_bonus.rename(columns={"Casos estimados": "casos_dengue"})
+                        )
+                    st.caption(
+                        "Cada hexágono representa una provincia, no un cantón ni un lugar "
+                        "de contagio. Gris = provincia no seleccionada. Gire con Shift."
+                    )
+                else:
+                    st.plotly_chart(
+                        mapa_provincial_2d(provincias_geo, totales_bonus, provincia_bonus),
+                        use_container_width=True,
+                        config={"displaylogo": False, "scrollZoom": True},
+                    )
+                    st.caption(
+                        "Los polígonos provinciales se construyen agrupando los cantones "
+                        "del mismo GeoJSON existente. Gris = provincia no seleccionada."
+                    )
+
+            st.markdown("#### Detalle de predicciones · próximas cuatro semanas")
+            detalle_bonus = predicciones_bonus.copy()
+            if provincia_bonus != "Todas":
+                detalle_bonus = detalle_bonus[detalle_bonus["Provincia"] == provincia_bonus]
+            detalle_bonus = detalle_bonus.sort_values(["Provincia", "Fecha"])
+            st.dataframe(
+                detalle_bonus, hide_index=True, use_container_width=True,
+                column_config={
+                    "Fecha": st.column_config.DateColumn("Fecha", format="DD/MM/YYYY"),
+                    "Casos estimados": st.column_config.NumberColumn(format="%d"),
+                },
+            )
+            if provincia_bonus == "Todas":
+                grafico_bonus = (
+                    predicciones_bonus.groupby("Fecha", as_index=False)["Casos estimados"]
+                    .sum()
+                )
+                titulo_grafico = "Total de casos estimados por semana · 7 provincias"
+            else:
+                grafico_bonus = detalle_bonus[["Fecha", "Casos estimados"]].copy()
+                titulo_grafico = f"Casos estimados por semana · {provincia_bonus}"
+            st.markdown(f"#### {titulo_grafico}")
+            st.line_chart(grafico_bonus.set_index("Fecha"), use_container_width=True)
+            st.download_button(
+                "Descargar predicciones (CSV)",
+                data=detalle_bonus.to_csv(index=False).encode("utf-8-sig"),
+                file_name=f"vectoria_prediccion_provincial_{fecha_bonus.isoformat()}.csv",
+                mime="text/csv", key="bonus_descargar_csv",
+            )
+            st.warning(resultado_bonus.get("advertencia", "Datos sintéticos; no son pronósticos oficiales."))
