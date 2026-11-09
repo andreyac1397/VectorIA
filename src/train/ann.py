@@ -25,7 +25,7 @@ DATASET_PATH = BASE_DIR / "data" / "raw" / "vectoria_acciones.csv"
 MODELS_DIR = BASE_DIR / "models"
 RESULTS_DIR = BASE_DIR / "data" / "processed"
 
-# Guardamos una versión nueva para preservar ann_model.keras de la compañera.
+# Guardamos una versión nueva para preservar ann_model.keras 
 MODEL_PATH = MODELS_DIR / "ann_model_v2.keras"
 SCALER_PATH = MODELS_DIR / "ann_scaler_v2.joblib"
 ENCODER_PATH = MODELS_DIR / "ann_label_encoder_v2.joblib"
