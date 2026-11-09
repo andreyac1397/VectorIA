@@ -1,74 +1,88 @@
+"""Laboratorio de modelos de VectorIA: CNN, LSTM y ANN."""
 
 import os
 import sys
+import math
 from datetime import date
 from pathlib import Path
 
+import altair as alt
 import pandas as pd
 import requests
 import streamlit as st
-
-# Permite importar utils.theme tanto desde Home.py como desde esta página.
-APP_DIR = Path(__file__).resolve().parents[1]
-if str(APP_DIR) not in sys.path:
-    sys.path.insert(0, str(APP_DIR))
-
-from utils.theme import aplicar_tema, mostrar_identidad, mostrar_encabezado
 
 
 # ============================================================
 # 1. CONFIGURACIÓN
 # ============================================================
 
+APP_DIR = Path(__file__).resolve().parents[1]
+
+if str(APP_DIR) not in sys.path:
+    sys.path.insert(0, str(APP_DIR))
+
+from utils.theme import aplicar_tema, mostrar_identidad, mostrar_encabezado
+
 API_URL = os.getenv("VECTORIA_API_URL", "http://127.0.0.1:8000")
 
 st.set_page_config(
     page_title="Probar modelos | VectorIA",
     page_icon="🦟",
-    layout="wide"
+    layout="wide",
 )
-
-
-# ============================================================
-# 2. IDENTIDAD VISUAL COMPARTIDA
-# ============================================================
 
 aplicar_tema()
 mostrar_identidad()
 
+# Los campos de solo lectura permanecen opacos y legibles.
+st.markdown(
+    """
+    <style>
+    div[data-testid="stNumberInput"] input:disabled,
+    div[data-testid="stTextInput"] input:disabled {
+        opacity: 1 !important;
+        -webkit-text-fill-color: #172b4d !important;
+        color: #172b4d !important;
+        background-color: #eaf0f6 !important;
+        border: 1px solid #9aaec4 !important;
+        font-weight: 600 !important;
+        cursor: not-allowed !important;
+    }
+    div[data-testid="stNumberInput"] input:disabled::placeholder,
+    div[data-testid="stTextInput"] input:disabled::placeholder {
+        opacity: 1 !important;
+        color: #526579 !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 
 # ============================================================
-# 3. ESTADO DE LA APLICACIÓN
+# 2. ESTADO DE LA APLICACIÓN
 # ============================================================
 
-if "cnn_resultado" not in st.session_state:
-    st.session_state.cnn_resultado = None
-
-if "lstm_resultado" not in st.session_state:
-    st.session_state.lstm_resultado = None
-
-if "ann_resultado" not in st.session_state:
-    st.session_state.ann_resultado = None
-
-valores_iniciales = {
-    "ann_casos": 0.0,
-    "ann_umbral": 0.0,
-    "ann_lluvia": 0.0,
-    "ann_temperatura": 0.0,
-    "ann_aegypti": "No",
-}
-
-for clave, valor in valores_iniciales.items():
+for clave in (
+    "cnn_resultado",
+    "lstm_resultado",
+    "ann_resultado",
+    "ann_contexto_preparado",
+    "ann_contexto_clave",
+):
     if clave not in st.session_state:
-        st.session_state[clave] = valor
+        st.session_state[clave] = None
+
+if "ann_aegypti" not in st.session_state:
+    st.session_state.ann_aegypti = "No"
 
 
 # ============================================================
-# 4. FUNCIONES DE COMUNICACIÓN CON LA API
+# 3. COMUNICACIÓN CON FASTAPI
 # ============================================================
 
 def consultar_api(endpoint, datos=None, archivo=None):
-    """Envía solicitudes a FastAPI y devuelve el resultado."""
+    """Envía solicitudes a FastAPI y devuelve su respuesta."""
 
     try:
         if archivo is not None:
@@ -78,16 +92,16 @@ def consultar_api(endpoint, datos=None, archivo=None):
                     "imagen": (
                         archivo.name,
                         archivo.getvalue(),
-                        archivo.type
+                        archivo.type,
                     )
                 },
-                timeout=60
+                timeout=60,
             )
         else:
             respuesta = requests.post(
                 f"{API_URL}{endpoint}",
                 json=datos,
-                timeout=60
+                timeout=60,
             )
 
         respuesta.raise_for_status()
@@ -119,7 +133,7 @@ def consultar_api(endpoint, datos=None, archivo=None):
 
 
 def modelo_disponible(resultado):
-    """Evita tratar las respuestas pendientes como predicciones."""
+    """Comprueba que la respuesta del modelo sea válida."""
 
     return (
         isinstance(resultado, dict)
@@ -128,7 +142,10 @@ def modelo_disponible(resultado):
 
 
 def extraer_especie(resultado):
-    """Obtiene la especie de una respuesta CNN."""
+    """Obtiene la especie identificada por la CNN."""
+
+    if not isinstance(resultado, dict):
+        return None
 
     return (
         resultado.get("especie")
@@ -137,13 +154,15 @@ def extraer_especie(resultado):
     )
 
 
+# ============================================================
+# 4. FUNCIONES DEL LSTM
+# ============================================================
+
 def extraer_total_casos(resultado):
-    """Calcula el total pronosticado para las cuatro semanas."""
+    """Suma los casos de las cuatro semanas pronosticadas."""
 
-    total = resultado.get("casos_pred_4sem")
-
-    if isinstance(total, (int, float)) and not isinstance(total, bool):
-        return float(total)
+    if not modelo_disponible(resultado):
+        return None
 
     predicciones = resultado.get("predicciones")
 
@@ -154,43 +173,164 @@ def extraer_total_casos(resultado):
 
     for prediccion in predicciones:
         if isinstance(prediccion, dict):
-            valor = prediccion.get("casos")
+            valor = prediccion.get(
+                "casos_estimados",
+                prediccion.get("casos"),
+            )
         else:
             valor = prediccion
 
-        if not isinstance(valor, (int, float)):
+        if (
+            not isinstance(valor, (int, float))
+            or isinstance(valor, bool)
+            or not math.isfinite(valor)
+            or valor < 0
+        ):
             return None
 
         valores.append(float(valor))
 
-    return sum(valores)
+    total = sum(valores)
+
+    if not math.isfinite(total):
+        return None
+
+    return total
 
 
 def obtener_filas_prediccion(resultado):
-    """Prepara las predicciones LSTM para una tabla y gráfico."""
+    """Prepara las cuatro semanas para el gráfico y la tabla."""
+
+    if not modelo_disponible(resultado):
+        return []
 
     predicciones = resultado.get("predicciones", [])
 
-    if not isinstance(predicciones, list):
+    if not isinstance(predicciones, list) or len(predicciones) != 4:
         return []
 
     filas = []
 
     for indice, prediccion in enumerate(predicciones, start=1):
-        if isinstance(prediccion, dict):
-            semana = prediccion.get("semana", f"Semana {indice}")
-            casos = prediccion.get("casos")
-        else:
-            semana = f"Semana {indice}"
-            casos = prediccion
 
-        if isinstance(casos, (int, float)):
-            filas.append({
-                "Semana": str(semana),
-                "Casos": float(casos)
-            })
+        if isinstance(prediccion, dict):
+            semana = prediccion.get("semana", indice)
+            casos = prediccion.get(
+                "casos_estimados",
+                prediccion.get("casos"),
+            )
+            fecha_texto = prediccion.get("fecha")
+        else:
+            semana = indice
+            casos = prediccion
+            fecha_texto = None
+
+        if (
+            not isinstance(casos, (int, float))
+            or isinstance(casos, bool)
+            or not math.isfinite(casos)
+            or casos < 0
+        ):
+            return []
+
+        fecha_formateada = None
+
+        if fecha_texto:
+            try:
+                fecha_formateada = pd.to_datetime(
+                    fecha_texto
+                ).strftime("%d/%m/%Y")
+            except (ValueError, TypeError):
+                pass
+
+        filas.append({
+            "Semana": f"Semana {semana}",
+            "Fecha": fecha_formateada or "No disponible",
+            "Casos estimados": int(round(float(casos))),
+        })
 
     return filas
+
+
+def obtener_datos_para_ann(resultado_lstm):
+    """Extrae únicamente los datos que la ANN necesita recibir.
+
+    La ANN obtiene su propio umbral, lluvia, temperatura
+    y semana epidemiológica desde el backend.
+    """
+
+    if not modelo_disponible(resultado_lstm):
+        return None
+
+    total = extraer_total_casos(resultado_lstm)
+
+    if total is None:
+        return None
+
+    if not float(total).is_integer():
+        return None
+
+    predicciones = resultado_lstm.get("predicciones", [])
+
+    if len(predicciones) != 4:
+        return None
+
+    primera_prediccion = predicciones[0]
+
+    if not isinstance(primera_prediccion, dict):
+        return None
+
+    fecha_texto = primera_prediccion.get("fecha")
+
+    if not isinstance(fecha_texto, str):
+        return None
+
+    try:
+        fecha_referencia = date.fromisoformat(fecha_texto)
+    except (ValueError, TypeError):
+        return None
+
+    return {
+        "casos_pred_4sem": int(total),
+        "fecha_referencia": fecha_referencia.isoformat(),
+    }
+
+
+def obtener_contexto_ann(resultado_ann):
+    """Obtiene las variables históricas devueltas por la ANN."""
+
+    if not modelo_disponible(resultado_ann):
+        return None
+
+    contexto = resultado_ann.get("contexto_ann")
+
+    if not isinstance(contexto, dict):
+        return None
+
+    campos = (
+        "casos_pred_4sem",
+        "umbral_endemico",
+        "lluvia_14d_mm",
+        "temp_max",
+        "semana_epi",
+    )
+
+    for campo in campos:
+        valor = contexto.get(campo)
+
+        if (
+            isinstance(valor, bool)
+            or not isinstance(valor, (int, float))
+            or not math.isfinite(valor)
+        ):
+            return None
+
+    return contexto
+
+
+def limpiar_recomendacion_ann():
+    """Evita mostrar una recomendación anterior al cambiar Aedes."""
+    st.session_state.ann_resultado = None
 
 
 # ============================================================
@@ -200,19 +340,20 @@ def obtener_filas_prediccion(resultado):
 mostrar_encabezado(
     "Laboratorio de modelos",
     "Pruebe los modelos de inteligencia artificial de VectorIA, "
-    "consulte sus resultados y genere recomendaciones preventivas."
+    "consulte sus resultados y genere recomendaciones preventivas.",
 )
 
 st.divider()
 
+
 # ============================================================
-# 6. PESTAÑAS DE LOS MODELOS
+# 6. PESTAÑAS
 # ============================================================
 
 tab_cnn, tab_lstm, tab_ann = st.tabs([
     "🔬 Identificación CNN",
     "📈 Predicción LSTM",
-    "🛡️ Recomendaciones ANN"
+    "🛡️ Recomendaciones ANN",
 ])
 
 
@@ -223,6 +364,7 @@ tab_cnn, tab_lstm, tab_ann = st.tabs([
 with tab_cnn:
 
     st.subheader("Identificación de mosquitos")
+
     st.caption(
         "Cargue una fotografía para identificar la especie "
         "mediante el modelo de clasificación CNN."
@@ -230,7 +372,7 @@ with tab_cnn:
 
     columna_entrada, columna_resultado = st.columns(
         [1, 1],
-        gap="large"
+        gap="large",
     )
 
     with columna_entrada:
@@ -240,30 +382,29 @@ with tab_cnn:
         imagen = st.file_uploader(
             "Seleccione una imagen",
             type=["jpg", "jpeg", "png"],
-            key="imagen_cnn"
+            key="imagen_cnn",
         )
 
         if imagen is not None:
             st.image(
                 imagen,
                 caption="Imagen seleccionada",
-                use_container_width=True
+                use_container_width=True,
             )
 
         if st.button(
             "Identificar mosquito",
             type="primary",
             use_container_width=True,
-            disabled=imagen is None
+            disabled=imagen is None,
         ):
-
             st.session_state.cnn_resultado = None
             st.session_state.ann_resultado = None
 
             with st.spinner("Analizando imagen..."):
                 resultado = consultar_api(
                     "/cnn/identificar-mosquito",
-                    archivo=imagen
+                    archivo=imagen,
                 )
 
             if resultado is not None:
@@ -285,7 +426,7 @@ with tab_cnn:
             st.warning(
                 resultado.get(
                     "mensaje",
-                    "El modelo CNN no está disponible."
+                    "El modelo CNN no está disponible.",
                 )
             )
 
@@ -296,17 +437,19 @@ with tab_cnn:
             if especie is not None:
                 st.markdown(
                     '<p class="small-label">Especie identificada</p>',
-                    unsafe_allow_html=True
+                    unsafe_allow_html=True,
                 )
-                st.markdown(
-                    f"### {especie}"
-                )
+                st.markdown(f"### {especie}")
 
-            if isinstance(confianza, (int, float)):
+            if (
+                isinstance(confianza, (int, float))
+                and math.isfinite(confianza)
+            ):
                 st.metric(
                     "Confianza",
-                    f"{confianza * 100:.1f}%"
+                    f"{confianza * 100:.1f}%",
                 )
+
                 st.progress(
                     max(0.0, min(float(confianza), 1.0))
                 )
@@ -315,10 +458,11 @@ with tab_cnn:
 
             if isinstance(probabilidades, dict):
                 st.markdown("#### Probabilidades por especie")
+
                 st.bar_chart(
                     pd.DataFrame(
                         list(probabilidades.items()),
-                        columns=["Especie", "Probabilidad"]
+                        columns=["Especie", "Probabilidad"],
                     ).set_index("Especie")
                 )
 
@@ -343,6 +487,7 @@ with tab_cnn:
 with tab_lstm:
 
     st.subheader("Predicción de casos de dengue")
+
     st.caption(
         "Consulte el pronóstico nacional de dengue "
         "para las próximas cuatro semanas."
@@ -350,7 +495,7 @@ with tab_lstm:
 
     columna_control, columna_grafico = st.columns(
         [1, 2],
-        gap="large"
+        gap="large",
     )
 
     with columna_control:
@@ -361,7 +506,7 @@ with tab_lstm:
             "Semana de referencia",
             value=date(2024, 12, 30),
             format="DD/MM/YYYY",
-            key="fecha_lstm"
+            key="fecha_lstm",
         )
 
         st.caption(
@@ -377,22 +522,49 @@ with tab_lstm:
         if st.button(
             "Generar predicción",
             type="primary",
-            use_container_width=True
+            use_container_width=True,
         ):
 
+            # Limpiar las predicciones anteriores.
             st.session_state.lstm_resultado = None
             st.session_state.ann_resultado = None
+            st.session_state.ann_contexto_preparado = None
+            st.session_state.ann_contexto_clave = None
 
             with st.spinner("Consultando modelo LSTM..."):
                 resultado = consultar_api(
                     "/lstm/predecir-dengue",
                     datos={
-                        "fecha": fecha.isoformat()
-                    }
+                        "fecha": fecha.isoformat(),
+                    },
                 )
 
             if resultado is not None:
                 st.session_state.lstm_resultado = resultado
+
+                # La preparación pertenece a ANN y se solicita aparte.
+                # El endpoint LSTM no agrega contexto_ann.
+                datos_para_ann = obtener_datos_para_ann(resultado)
+
+                if datos_para_ann is not None:
+                    with st.spinner("Preparando variables de ANN..."):
+                        preparacion = consultar_api(
+                            "/ann/preparar-variables",
+                            datos=datos_para_ann,
+                        )
+
+                    contexto = obtener_contexto_ann(preparacion)
+                    if contexto is not None:
+                        st.session_state.ann_contexto_preparado = contexto
+                        st.session_state.ann_contexto_clave = (
+                            datos_para_ann["casos_pred_4sem"],
+                            datos_para_ann["fecha_referencia"],
+                        )
+                    else:
+                        st.warning(
+                            "El LSTM predijo los casos, pero no se pudieron "
+                            "preparar las variables históricas de ANN."
+                        )
 
     with columna_grafico:
 
@@ -410,7 +582,7 @@ with tab_lstm:
             st.warning(
                 resultado.get(
                     "mensaje",
-                    "El modelo LSTM no está disponible."
+                    "El modelo LSTM no está disponible.",
                 )
             )
 
@@ -420,15 +592,100 @@ with tab_lstm:
             if filas:
                 df = pd.DataFrame(filas)
 
-                st.line_chart(
-                    df.set_index("Semana")["Casos"],
-                    use_container_width=True
+                # Mantener el gráfico original.
+                df_grafico = df.copy()
+
+                df_grafico["Fecha corta"] = (
+                    df_grafico["Fecha"].apply(
+                        lambda valor: (
+                            pd.to_datetime(
+                                valor,
+                                dayfirst=True,
+                            ).strftime("%d/%m/%Y")
+                            if valor != "No disponible"
+                            else None
+                        )
+                    )
+                )
+
+                df_grafico["Semana visible"] = [
+                    f"Sem. {i + 1} · "
+                    f"{fecha_txt if fecha_txt else 'sin fecha'}"
+                    for i, fecha_txt in enumerate(
+                        df_grafico["Fecha corta"]
+                    )
+                ]
+
+                orden_semanas = (
+                    df_grafico["Semana visible"].tolist()
+                )
+
+                grafico_base = alt.Chart(df_grafico).encode(
+                    x=alt.X(
+                        "Semana visible:N",
+                        sort=orden_semanas,
+                        title="Semana y fecha del pronóstico",
+                        axis=alt.Axis(
+                            labelAngle=0,
+                            labelLimit=180,
+                        ),
+                    ),
+                    y=alt.Y(
+                        "Casos estimados:Q",
+                        title="Casos de dengue estimados",
+                        scale=alt.Scale(zero=True),
+                    ),
+                    tooltip=[
+                        alt.Tooltip(
+                            "Semana:N",
+                            title="Semana",
+                        ),
+                        alt.Tooltip(
+                            "Fecha:N",
+                            title="Fecha",
+                        ),
+                        alt.Tooltip(
+                            "Casos estimados:Q",
+                            title="Casos",
+                            format=",.0f",
+                        ),
+                    ],
+                )
+
+                linea = grafico_base.mark_line(
+                    strokeWidth=3
+                )
+
+                puntos = grafico_base.mark_circle(
+                    size=100
+                )
+
+                valores = grafico_base.mark_text(
+                    dy=-16,
+                    fontSize=13,
+                    fontWeight="bold",
+                ).encode(
+                    text=alt.Text(
+                        "Casos estimados:Q",
+                        format=",.0f",
+                    )
+                )
+
+                st.altair_chart(
+                    (linea + puntos + valores).properties(
+                        height=330
+                    ),
+                    use_container_width=True,
                 )
 
                 st.dataframe(
-                    df,
+                    df[[
+                        "Semana",
+                        "Fecha",
+                        "Casos estimados",
+                    ]],
                     hide_index=True,
-                    use_container_width=True
+                    use_container_width=True,
                 )
 
                 total = extraer_total_casos(resultado)
@@ -436,7 +693,7 @@ with tab_lstm:
                 if total is not None:
                     st.metric(
                         "Total pronosticado (4 semanas)",
-                        f"{total:,.0f} casos"
+                        f"{total:,.0f} casos",
                     )
 
             else:
@@ -460,31 +717,44 @@ with tab_lstm:
 with tab_ann:
 
     st.subheader("Recomendaciones preventivas")
-    st.caption(
-        "Combine los resultados de CNN y LSTM con las "
-        "condiciones epidemiológicas y climáticas."
-    )
 
-    # --------------------------------------------------------
-    # Importar resultados de CNN y LSTM
-    # --------------------------------------------------------
+    st.caption(
+        "La ANN combina los casos pronosticados por LSTM "
+        "con referencias históricas de clima y dengue, "
+        "además de la detección de Aedes."
+    )
 
     resultado_cnn = st.session_state.cnn_resultado
     resultado_lstm = st.session_state.lstm_resultado
 
     especie = None
-    total_casos = None
 
-    if resultado_cnn and modelo_disponible(resultado_cnn):
+    if modelo_disponible(resultado_cnn):
         especie = extraer_especie(resultado_cnn)
 
-    if resultado_lstm and modelo_disponible(resultado_lstm):
-        total_casos = extraer_total_casos(resultado_lstm)
+    # Los casos y la fecha vienen del LSTM; el contexto ya fue
+    # solicitado a ANN automáticamente tras generar la predicción.
+    datos_lstm_ann = obtener_datos_para_ann(resultado_lstm)
+    contexto_ann = st.session_state.ann_contexto_preparado
+
+    clave_actual = (
+        datos_lstm_ann["casos_pred_4sem"],
+        datos_lstm_ann["fecha_referencia"],
+    ) if datos_lstm_ann is not None else None
+
+    if (
+        clave_actual is None
+        or st.session_state.ann_contexto_clave != clave_actual
+    ):
+        contexto_ann = None
+
+    contexto_listo = (
+        datos_lstm_ann is not None
+        and isinstance(contexto_ann, dict)
+    )
 
     with st.container(border=True):
-
         st.markdown("#### Resultados de otros modelos")
-
         col_cnn, col_lstm = st.columns(2)
 
         with col_cnn:
@@ -494,164 +764,221 @@ with tab_ann:
                 st.caption("CNN: sin resultado disponible")
 
         with col_lstm:
-            if total_casos is not None:
+            if datos_lstm_ann is not None:
                 st.success(
-                    f"LSTM: {total_casos:,.0f} casos previstos"
+                    f"LSTM: {datos_lstm_ann['casos_pred_4sem']:,.0f} "
+                    "casos previstos"
                 )
             else:
                 st.caption("LSTM: sin resultado disponible")
 
-        if st.button(
-            "Utilizar resultados disponibles",
-            use_container_width=True
-        ):
-
-            importados = []
-
-            if especie is not None:
-                st.session_state.ann_aegypti = (
-                    "Sí"
-                    if "aegypti" in str(especie).lower()
-                    else "No"
-                )
-                importados.append("CNN")
-
-            if total_casos is not None:
-                st.session_state.ann_casos = max(
-                    0.0,
-                    float(total_casos)
-                )
-                importados.append("LSTM")
-
-            if importados:
-                st.session_state.ann_resultado = None
-                st.success(
-                    "Datos importados desde: "
-                    + ", ".join(importados)
-                )
-            else:
-                st.warning(
-                    "Todavía no hay resultados para importar."
-                )
-
-    # --------------------------------------------------------
-    # Formulario ANN
-    # --------------------------------------------------------
-
+    # Los valores ya aparecen antes de ejecutar el clasificador ANN.
     with st.container(border=True):
-
         st.markdown("#### Variables de entrada")
-
         st.caption(
-            "Puede modificar manualmente los valores "
-            "para analizar diferentes escenarios."
+            "Casos y fecha: predicción LSTM. Umbral, lluvia, temperatura "
+            "y semana: referencias preparadas por ANN. "
+            "Los campos son de solo lectura."
         )
 
         col1, col2 = st.columns(2, gap="large")
 
         with col1:
-
-            casos = st.number_input(
+            st.number_input(
                 "Casos pronosticados (4 semanas)",
-                min_value=0.0,
-                step=1.0,
-                key="ann_casos",
-                help="Total de casos estimados por la LSTM."
+                min_value=0,
+                value=int(contexto_ann["casos_pred_4sem"]) if contexto_listo else 0,
+                step=1,
+                disabled=True,
+                key=f"ann_casos_solo_lectura_{clave_actual}",
             )
-
-            umbral = st.number_input(
+            st.number_input(
                 "Umbral endémico",
                 min_value=0.0,
-                step=1.0,
-                key="ann_umbral"
+                value=float(contexto_ann["umbral_endemico"]) if contexto_listo else 0.0,
+                format="%.2f",
+                disabled=True,
+                key=f"ann_umbral_solo_lectura_{clave_actual}",
             )
-
-            lluvia = st.number_input(
+            st.number_input(
                 "Lluvia acumulada en 14 días (mm)",
                 min_value=0.0,
-                step=1.0,
-                key="ann_lluvia"
+                value=float(contexto_ann["lluvia_14d_mm"]) if contexto_listo else 0.0,
+                format="%.2f",
+                disabled=True,
+                key=f"ann_lluvia_solo_lectura_{clave_actual}",
             )
 
         with col2:
-
-            temperatura = st.number_input(
+            st.number_input(
                 "Temperatura máxima (°C)",
-                min_value=-20.0,
-                max_value=60.0,
-                step=0.5,
-                key="ann_temperatura"
+                value=float(contexto_ann["temp_max"]) if contexto_listo else 0.0,
+                format="%.2f",
+                disabled=True,
+                key=f"ann_temperatura_solo_lectura_{clave_actual}",
+            )
+            st.text_input(
+                "Fecha de referencia",
+                value=contexto_ann["fecha_referencia"] if contexto_listo else "Sin predicción",
+                disabled=True,
+                key=f"ann_fecha_solo_lectura_{clave_actual}",
+            )
+            st.number_input(
+                "Semana epidemiológica",
+                min_value=0,
+                value=int(contexto_ann["semana_epi"]) if contexto_listo else 0,
+                step=1,
+                disabled=True,
+                key=f"ann_semana_solo_lectura_{clave_actual}",
             )
 
             aegypti = st.radio(
                 "¿Se detectó Aedes aegypti?",
                 options=["Sí", "No"],
                 horizontal=True,
-                key="ann_aegypti"
+                key="ann_aegypti",
+                on_change=limpiar_recomendacion_ann,
+            )
+            st.caption(
+                "Selección manual hasta que esté disponible la CNN."
             )
 
-            st.caption(
-                "La detección puede introducirse manualmente "
-                "o importarse desde CNN."
+        if datos_lstm_ann is None:
+            st.info("Primero genere una predicción LSTM válida.")
+        elif not contexto_listo:
+            st.warning(
+                "El LSTM devolvió casos y fecha, pero no se prepararon "
+                "las variables de ANN. Genere nuevamente la predicción."
             )
+
+        if contexto_listo:
+            origen_clima = contexto_ann.get("origen_clima")
+            if origen_clima == "registro_historico_ann":
+                st.caption("Clima: registro histórico de vectoria_acciones.csv.")
+            elif origen_clima == "referencia_climatica_historica_ann":
+                st.caption(
+                    "Clima: estimación histórica de vectoria_acciones.csv; "
+                    "no es una observación futura."
+                )
+            advertencia = contexto_ann.get("advertencia")
+            if advertencia:
+                with st.expander("Información sobre el origen de los datos"):
+                    st.write(advertencia)
 
         if st.button(
             "Generar recomendación",
             type="primary",
-            use_container_width=True
+            use_container_width=True,
+            disabled=not contexto_listo,
         ):
-
+            # Enviamos las variables ya preparadas; no se recalculan.
             datos_ann = {
-                "casos_pred_4sem": casos,
-                "umbral_endemico": umbral,
-                "lluvia_14d_mm": lluvia,
-                "temp_max": temperatura,
-                "aegypti_det": 1 if aegypti == "Sí" else 0
+                "casos_pred_4sem": int(contexto_ann["casos_pred_4sem"]),
+                "fecha_referencia": contexto_ann["fecha_referencia"],
+                "aegypti_det": 1 if aegypti == "Sí" else 0,
+                "umbral_endemico": float(contexto_ann["umbral_endemico"]),
+                "lluvia_14d_mm": float(contexto_ann["lluvia_14d_mm"]),
+                "temp_max": float(contexto_ann["temp_max"]),
+                "semana_epi": int(contexto_ann["semana_epi"]),
             }
 
-            with st.spinner("Analizando escenario..."):
-                resultado = consultar_api(
+            st.session_state.ann_resultado = None
+            with st.spinner("Generando recomendación ANN..."):
+                st.session_state.ann_resultado = consultar_api(
                     "/ann/recomendar-accion",
-                    datos=datos_ann
+                    datos=datos_ann,
                 )
-
-            st.session_state.ann_resultado = resultado
 
     # --------------------------------------------------------
     # Resultado ANN
     # --------------------------------------------------------
 
-    st.markdown("#### Resultado de la recomendación")
-
     resultado = st.session_state.ann_resultado
 
+    # --------------------------------------------------------
+    # Resultado del modelo ANN
+    # --------------------------------------------------------
+
+    st.markdown("#### Resultado de la recomendación")
+
     if resultado is None:
+
         st.info(
-            "Complete las variables y ejecute el modelo ANN "
-            "para obtener una recomendación."
+            "Genere primero la predicción LSTM y seleccione "
+            "si se detectó Aedes aegypti para obtener "
+            "una recomendación."
         )
 
     elif not modelo_disponible(resultado):
+
         st.warning(
             resultado.get(
                 "mensaje",
-                "El modelo ANN todavía no está disponible."
+                "El modelo ANN todavía no está disponible.",
             )
         )
 
     else:
+
         recomendacion = resultado.get("recomendacion")
         explicacion = resultado.get("explicacion")
+        confianza = resultado.get("confianza")
 
         if recomendacion:
+
             st.success(
                 "Acción recomendada: "
-                + str(recomendacion).replace("_", " ").capitalize()
+                + str(recomendacion)
+                .replace("_", " ")
+                .capitalize()
             )
+
+            if isinstance(confianza, (int, float)):
+                st.metric(
+                    "Confianza del modelo",
+                    f"{confianza * 100:.1f}%",
+                )
 
             if explicacion:
                 st.write(explicacion)
+
+            probabilidades = resultado.get(
+                "probabilidades"
+            )
+
+            if isinstance(probabilidades, dict):
+
+                with st.expander(
+                    "Ver probabilidades por recomendación"
+                ):
+                    tabla_probabilidades = pd.DataFrame(
+                        [
+                            {
+                                "Recomendación": clase.replace(
+                                    "_", " "
+                                ).capitalize(),
+                                "Probabilidad": float(valor),
+                            }
+                            for clase, valor in probabilidades.items()
+                        ]
+                    )
+
+                    st.dataframe(
+                        tabla_probabilidades,
+                        hide_index=True,
+                        use_container_width=True,
+                        column_config={
+                            "Probabilidad": st.column_config.ProgressColumn(
+                                "Probabilidad",
+                                min_value=0,
+                                max_value=1,
+                                format="percent",
+                            )
+                        },
+                    )
+
         else:
+
             st.info(
                 "La API respondió, pero todavía no devolvió "
                 "una recomendación."
@@ -664,5 +991,3 @@ with tab_ann:
         "para la vigilancia del dengue y no sustituyen "
         "las decisiones de las autoridades sanitarias."
     )
-
-

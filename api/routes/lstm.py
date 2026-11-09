@@ -1,6 +1,20 @@
-from fastapi import APIRouter
-from pydantic import BaseModel
+
+"""Ruta del modelo LSTM nacional para predecir casos de dengue.
+
+El LSTM prepara sus propias variables y genera las predicciones
+de las próximas cuatro semanas.
+
+La preparación de variables de la ANN se realiza por separado
+desde el módulo correspondiente a la ANN.
+"""
+
 from datetime import date
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+
+from api.services.lstm_service import predecir_dengue
+
 
 router = APIRouter(
     prefix="/lstm",
@@ -8,19 +22,26 @@ router = APIRouter(
 )
 
 
-# Datos que recibirá la API
 class PrediccionRequest(BaseModel):
     fecha: date
 
 
-# Endpoint de predicción
 @router.post("/predecir-dengue")
-def predecir_dengue(datos: PrediccionRequest):
+def ejecutar_prediccion(datos: PrediccionRequest):
+    """Ejecuta el LSTM y devuelve sus predicciones nacionales."""
 
-    # El modelo LSTM se integrará posteriormente
-    return {
-        "estado": "pendiente",
-        "mensaje": "El modelo LSTM todavía no está conectado.",
-        "fecha_seleccionada": datos.fecha,
-        "semanas_prediccion": 4
-    }
+    try:
+        resultado = predecir_dengue(datos.fecha)
+        return resultado
+
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error)
+        ) from error
+
+    except Exception as error:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error del LSTM: {error}"
+        ) from error
