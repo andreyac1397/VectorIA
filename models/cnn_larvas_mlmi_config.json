@@ -1,0 +1,43 @@
+{
+  "model_name": "VectorIA CNN Larvas MLMI-2024",
+  "model_file": "cnn_larvas_mlmi.keras",
+  "model_type": "Binary CNN",
+  "experimental_bonus": true,
+  "input_width": 192,
+  "input_height": 192,
+  "input_channels": 3,
+  "color_mode": "RGB",
+  "resize_method": "resize_with_pad",
+  "input_range": [
+    0,
+    255
+  ],
+  "normalization_inside_model": true,
+  "classes": [
+    "Aedes aegypti",
+    "Culex quinquefasciatus"
+  ],
+  "class_ids": {
+    "Aedes aegypti": 0,
+    "Culex quinquefasciatus": 1
+  },
+  "output_activation": "sigmoid",
+  "threshold": 0.5,
+  "validation_metrics": {
+    "accuracy": 0.9090909090909091,
+    "f1_macro": 0.9090909090909091
+  },
+  "test_metrics": {
+    "accuracy": 0.9166666666666666,
+    "precision_macro": 0.9171301446051168,
+    "recall_macro": 0.9166666666666667,
+    "f1_macro": 0.9166435120866907
+  },
+  "body_regions": [
+    "abdomen",
+    "full body",
+    "head",
+    "siphon"
+  ],
+  "notes": "Modelo experimental bonus entrenado con imágenes microscópicas MLMI-2024. No sustituye el clasificador principal de mosquitos adultos de VectorIA."
+}
