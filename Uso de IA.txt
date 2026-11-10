@@ -1,0 +1,19 @@
+ Uso de la Inteligencia Artificial en el desarrollo del proyecto
+
+Durante el desarrollo del proyecto universitario se utilizó la Inteligencia Artificial (IA) como una herramienta de apoyo para facilitar diferentes tareas técnicas y fortalecer el proceso de aprendizaje. Su uso permitió agilizar el trabajo, resolver dudas y encontrar soluciones a los problemas que surgieron durante el desarrollo.
+
+Principales usos de la IA:
+
+1. Solución de errores: Se utilizó para identificar, analizar y corregir errores en el código, así como para comprender sus causas y encontrar posibles soluciones.
+
+2. Apoyo en la codificación: Brindó asistencia en la creación, revisión y optimización de código, además de proporcionar ejemplos y orientación para implementar diferentes funcionalidades.
+
+3. Comprensión de temas: Se utilizó para aclarar conceptos técnicos, comprender algoritmos y obtener explicaciones paso a paso sobre temas relacionados con programación, inteligencia artificial y análisis de datos.
+
+4. Entrenamiento de modelos: Facilitó la comprensión y configuración de modelos de aprendizaje automático, incluyendo la selección de parámetros, capas, neuronas, épocas y la interpretación de resultados.
+
+5. Configuración de herramientas: Brindó orientación durante la instalación y configuración de programas, bibliotecas, dependencias y entornos de desarrollo necesarios para trabajar en el proyecto.
+
+Conclusión:
+
+La IA fue una herramienta complementaria durante el desarrollo del proyecto, ya que permitió resolver dificultades técnicas, mejorar el proceso de programación y facilitar la comprensión de los temas estudiados. Sin embargo, las soluciones proporcionadas fueron revisadas, adaptadas y comprobadas por los integrantes del equipo, quienes mantuvieron la responsabilidad sobre el desarrollo y los resultados obtenidos.
