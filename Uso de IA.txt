@@ -1,19 +1,29 @@
- Uso de la Inteligencia Artificial en el desarrollo del proyecto
+ Uso de la Inteligencia Artificial en el desarrollo del proyecto universitario
 
-Durante el desarrollo del proyecto universitario se utilizó la Inteligencia Artificial (IA) como una herramienta de apoyo para facilitar diferentes tareas técnicas y fortalecer el proceso de aprendizaje. Su uso permitió agilizar el trabajo, resolver dudas y encontrar soluciones a los problemas que surgieron durante el desarrollo.
+Durante el desarrollo del proyecto universitario se utilizó la Inteligencia Artificial (IA) como una herramienta de apoyo en diferentes etapas del trabajo. Su implementación permitió facilitar tareas técnicas, resolver problemas, comprender conceptos y agilizar algunos procesos relacionados con la programación y el desarrollo de modelos de inteligencia artificial.
 
-Principales usos de la IA:
+La IA se utilizó principalmente en las siguientes áreas:
 
-1. Solución de errores: Se utilizó para identificar, analizar y corregir errores en el código, así como para comprender sus causas y encontrar posibles soluciones.
+1. Solución y corrección de errores
 
-2. Apoyo en la codificación: Brindó asistencia en la creación, revisión y optimización de código, además de proporcionar ejemplos y orientación para implementar diferentes funcionalidades.
+Se utilizó para identificar, analizar y corregir errores que surgieron durante la programación y ejecución de los diferentes procesos. También permitió comprender las causas de los problemas y obtener posibles soluciones para evitar que se repitieran.
 
-3. Comprensión de temas: Se utilizó para aclarar conceptos técnicos, comprender algoritmos y obtener explicaciones paso a paso sobre temas relacionados con programación, inteligencia artificial y análisis de datos.
+2. Apoyo en la codificación
 
-4. Entrenamiento de modelos: Facilitó la comprensión y configuración de modelos de aprendizaje automático, incluyendo la selección de parámetros, capas, neuronas, épocas y la interpretación de resultados.
+Brindó asistencia en la creación, revisión y optimización de código, proporcionando ejemplos, explicaciones y recomendaciones para implementar funciones y mejorar el funcionamiento de los programas.
 
-5. Configuración de herramientas: Brindó orientación durante la instalación y configuración de programas, bibliotecas, dependencias y entornos de desarrollo necesarios para trabajar en el proyecto.
+3. Comprensión de temas técnicos
 
-Conclusión:
+Se utilizó como recurso de aprendizaje para aclarar dudas y comprender conceptos relacionados con programación, bases de datos, análisis de datos e inteligencia artificial. Además, permitió obtener explicaciones paso a paso sobre temas que requerían mayor comprensión.
 
-La IA fue una herramienta complementaria durante el desarrollo del proyecto, ya que permitió resolver dificultades técnicas, mejorar el proceso de programación y facilitar la comprensión de los temas estudiados. Sin embargo, las soluciones proporcionadas fueron revisadas, adaptadas y comprobadas por los integrantes del equipo, quienes mantuvieron la responsabilidad sobre el desarrollo y los resultados obtenidos.
+4. Entrenamiento de modelos
+
+Se utilizó para recibir orientación durante la creación, configuración y entrenamiento de modelos de aprendizaje automático. Esto incluyó consultas sobre la cantidad de capas y neuronas, selección de parámetros, épocas de entrenamiento, evaluación de resultados y posibles mejoras en el rendimiento de los modelos.
+
+5. Configuración de herramientas y entornos
+
+La IA también facilitó la instalación y configuración de programas, bibliotecas, dependencias y entornos de desarrollo. Mediante instrucciones y recomendaciones, permitió solucionar inconvenientes de compatibilidad y preparar las herramientas necesarias para trabajar en el proyecto.
+
+Conclusión
+
+La Inteligencia Artificial representó un recurso importante durante el desarrollo del proyecto, ya que permitió ahorrar tiempo, resolver dificultades técnicas y fortalecer los conocimientos adquiridos durante el proceso. Se utilizó como una herramienta complementaria y no como sustituto del trabajo de los estudiantes, por lo que las recomendaciones y soluciones proporcionadas fueron revisadas, adaptadas y comprobadas antes de implementarse.
