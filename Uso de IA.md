@@ -1,29 +1,29 @@
- Uso de la Inteligencia Artificial en el desarrollo del proyecto universitario
+# Uso de la Inteligencia Artificial en el desarrollo del proyecto universitario
 
 Durante el desarrollo del proyecto universitario se utilizó la Inteligencia Artificial (IA) como una herramienta de apoyo en diferentes etapas del trabajo. Su implementación permitió facilitar tareas técnicas, resolver problemas, comprender conceptos y agilizar algunos procesos relacionados con la programación y el desarrollo de modelos de inteligencia artificial.
 
 La IA se utilizó principalmente en las siguientes áreas:
 
-1. Solución y corrección de errores
+## 1. Solución y corrección de errores
 
 Se utilizó para identificar, analizar y corregir errores que surgieron durante la programación y ejecución de los diferentes procesos. También permitió comprender las causas de los problemas y obtener posibles soluciones para evitar que se repitieran.
 
-2. Apoyo en la codificación
+## 2. Apoyo en la codificación
 
 Brindó asistencia en la creación, revisión y optimización de código, proporcionando ejemplos, explicaciones y recomendaciones para implementar funciones y mejorar el funcionamiento de los programas.
 
-3. Comprensión de temas técnicos
+## 3. Comprensión de temas técnicos
 
 Se utilizó como recurso de aprendizaje para aclarar dudas y comprender conceptos relacionados con programación, bases de datos, análisis de datos e inteligencia artificial. Además, permitió obtener explicaciones paso a paso sobre temas que requerían mayor comprensión.
 
-4. Entrenamiento de modelos
+## 4. Entrenamiento de modelos
 
 Se utilizó para recibir orientación durante la creación, configuración y entrenamiento de modelos de aprendizaje automático. Esto incluyó consultas sobre la cantidad de capas y neuronas, selección de parámetros, épocas de entrenamiento, evaluación de resultados y posibles mejoras en el rendimiento de los modelos.
 
-5. Configuración de herramientas y entornos
+## 5. Configuración de herramientas y entornos
 
 La IA también facilitó la instalación y configuración de programas, bibliotecas, dependencias y entornos de desarrollo. Mediante instrucciones y recomendaciones, permitió solucionar inconvenientes de compatibilidad y preparar las herramientas necesarias para trabajar en el proyecto.
 
-Conclusión
+## Conclusión
 
 La Inteligencia Artificial representó un recurso importante durante el desarrollo del proyecto, ya que permitió ahorrar tiempo, resolver dificultades técnicas y fortalecer los conocimientos adquiridos durante el proceso. Se utilizó como una herramienta complementaria y no como sustituto del trabajo de los estudiantes, por lo que las recomendaciones y soluciones proporcionadas fueron revisadas, adaptadas y comprobadas antes de implementarse.
